@@ -1,0 +1,24 @@
+{
+  "@@locale": "fr",
+  "welcomeElior": "Bienvenue à Elior 👋",
+  "loginYourAccount": "Connectez-vous à votre compte",
+  "pleaseEnterYourEmail": "Veuillez entrer votre e-mail",
+
+  "greetUser": "Bonjour {name}",
+  "@greetUser": {
+    "description": "Greets the user by name",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "nRooms": "{count, plural, =0{Aucune chambre} =1{1 chambre} other{{count} chambres}}",
+  "@nRooms": {
+    "description": "Pluralized room count",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "hostGender": "{gender, select, male{Hôte} female{Hôtesse} other{Hôte}}",
+  "@hostGender": {
+    "description": "Gendered label for host/hostess",
+    "placeholders": { "gender": {} }
+  }
+}
