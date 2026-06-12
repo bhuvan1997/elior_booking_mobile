@@ -1,5 +1,8 @@
+import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/hotel_booking/room_available_screen.dart';
 import 'package:elior/utils/storage.dart';
+import 'package:elior/widgets/app_button.dart';
+import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -64,16 +67,6 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Show loader while fetching
-    if (isLoading) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF5F8FF),
-        body: const Center(
-          child: CircularProgressIndicator(color: Colors.orange),
-        ),
-      );
-    }
-
     // ✅ After loading, check if data exists
     final hotel = hotelDetailModel?.data?.isNotEmpty == true
         ? hotelDetailModel!.data!.first
@@ -113,87 +106,38 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
   Widget buildHotelDetailUI(Datas hotel) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hotel.translatedName ?? hotel.name ?? "",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  "${formatDate(LocalStorages().getCheckIn())} -${formatDate(LocalStorages().getCheckOut())} ",
-                  style: TextStyle(color: Colors.black, fontSize: 12),
-                ),
-              ],
+      appBar: getAppBar(
+        context,
+        hotel.translatedName ?? hotel.name ?? "",
+        isSubtext: true,
+        subtext:
+            "${formatDate(LocalStorages().getCheckIn())} -${formatDate(LocalStorages().getCheckOut())} ",
+        centerTitle: false,
+        trailing: [
+          GestureDetector(
+            onTap: () => shareProperty(
+              hotel.translatedName ?? hotel.name ?? "",
+              hotel.city ?? "",
+              hotel.website ?? "",
             ),
-            GestureDetector(
-              onTap: () {
-                shareProperty(
-                  hotel.name ?? "",
-                  hotel.city ?? "",
-                  "https://eliorbooking.com/api/search-homestay-by-id?homestay_id=${hotel.id}",
-                );
-              },
-              child: const Icon(Icons.share_outlined),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Icon(Icons.share, color: AppTheme.black, size: 20),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Colors.grey, width: 0.2)),
-        ),
-        child: ElevatedButton(
-          onPressed: () {
-            LocalStorages().savehotelName(
-              hotelName: hotel.translatedName ?? "",
-            );
-            LocalStorages().savehotelAddress(
-              hotelAddress: hotel.translatedAddress ?? "",
-            );
-            Get.to(
-              RoomListScreen(
-                id: hotel.id ?? 0,
-                checkIn: hotel.checkInTime ?? "",
-                checkOut: hotel.checkOutTime ?? "",
-                hotelName: hotel.translatedName ?? hotel.name ?? "",
-              ),
-            );
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: AppButton(
+          title: "Select Rooms",
+          onTap: () {
+            _showDateSelectionBottomSheet(context, hotel);
           },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: const Text(
-            'Select Rooms',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-          ),
         ),
       ),
       body: ListView(
         children: [
-          // ✅ Cover Image (first from API)
           ClipRRect(
             borderRadius: const BorderRadius.vertical(
               bottom: Radius.circular(16),
@@ -275,7 +219,7 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
                 // ✅ Description
                 const Text(
                   'About the Property',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -348,51 +292,36 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
                     "Facilities".tr,
                     style: const TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  Card(
-                    elevation: 0,
-                    color: Colors.transparent,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0,
-                        vertical: 0,
-                      ),
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: isFacilitiesExpanded
-                            ? hotel.facilities!.length
-                            : (hotel.facilities!.length > 4
-                                  ? 4
-                                  : hotel.facilities!.length),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 1, // 2 items per row
-                              mainAxisSpacing: 5,
-                              crossAxisSpacing: 5,
-                              childAspectRatio: 14, // adjust height
-                            ),
-                        itemBuilder: (context, index) {
-                          final facility = hotel.facilities![index];
-                          return Row(
-                            children: [
-                              Icon(Icons.check, color: Colors.green),
-                              Text(
-                                facility,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 8,),
+                  ListView.separated(
+                    separatorBuilder: (_, _) => const SizedBox(height: 4,),
+                    shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: isFacilitiesExpanded
+                          ? hotel.facilities!.length
+                          : (hotel.facilities!.length > 4
+                          ? 4
+                          : hotel.facilities!.length),
+                      itemBuilder: (context, index) {
+                    final facility = hotel.facilities![index];
+                    return Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, size: 20, color: Colors.green),
+                        const SizedBox(width: 8,),
+                        Text(
+                          facility,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
 
                   if (hotel.facilities!.length > 4)
                     GestureDetector(
@@ -402,7 +331,7 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
                       child: const Padding(
                         padding: EdgeInsets.only(top: 6),
                         child: Text(
-                          "View More",
+                          "View All",
                           style: TextStyle(
                             color: Colors.orange,
                             fontWeight: FontWeight.bold,
@@ -418,66 +347,36 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
                     "Property Rules & Information".tr,
                     style: const TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Card(
-                    elevation: 0,
-                    color: Colors.transparent,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0,
-                        vertical: 15,
-                      ),
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: hotel.rules!.length > 4
-                            ? 4
-                            : hotel.rules!.length,
-
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 1, // 2 items per row
-                              mainAxisSpacing: 5,
-                              crossAxisSpacing: 5,
-                              childAspectRatio: 12, // adjust height
+                  ListView.separated(
+                      separatorBuilder: (_, _) => const SizedBox(height: 4,),
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: isRulesExpanded
+                          ? hotel.rules!.length
+                          : (hotel.rules!.length > 4
+                          ? 4
+                          : hotel.rules!.length),
+                      itemBuilder: (context, index) {
+                        final rule = hotel.rules![index];
+                        return Row(
+                          children: [
+                            Icon(Icons.check_circle_outline, size: 20, color: Colors.green),
+                            const SizedBox(width: 8,),
+                            Text(
+                              rule,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                        itemBuilder: (context, index) {
-                          final facility = hotel.rules![index];
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Container(
-                                child: Icon(Icons.check, color: Colors.green),
-                              ),
-                              SizedBox(width: 5),
-                              Expanded(
-                                child: Container(
-                                  height: 20,
-                                  child: Align(
-                                    alignment: Alignment.topLeft,
-                                    child: Text(
-                                      facility,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.start,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ),
+                          ],
+                        );
+                      }),
                   if (hotel.rules!.length > 4)
                     GestureDetector(
                       onTap: () {
@@ -486,7 +385,7 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
                       child: const Padding(
                         padding: EdgeInsets.only(top: 6),
                         child: Text(
-                          "View More",
+                          "View All",
                           style: TextStyle(
                             color: Colors.orange,
                             fontWeight: FontWeight.bold,
@@ -514,12 +413,15 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final review = hotel.ratingReviews![index];
-                      return Card(
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Color(0xff010101).withValues(alpha: 0.1),
+                          ),
+                          boxShadow: [BoxShadow(color: AppTheme.black.withValues(alpha: 0.1), offset: const Offset(1, 2), blurRadius: 90, spreadRadius: 4)],
                         ),
-                        elevation: 2,
                         child: Padding(
                           padding: const EdgeInsets.all(12),
                           child: Column(
@@ -650,98 +552,73 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          builder: (_, scrollController) {
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Drag handle
-                  Center(
-                    child: Container(
-                      width: 50,
-                      height: 5,
-                      margin: const EdgeInsets.only(bottom: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 50,
+                  height: 5,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
                   ),
-
-                  // Header
-                  Row(
-                    children: const [
-                      Icon(Icons.rule, color: Colors.orange),
-                      SizedBox(width: 8),
-                      Text(
-                        "All Property Rules & Info",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Rules list
-                  Expanded(
-                    child: ListView.builder(
-                      controller: scrollController,
-                      itemCount: rules.length,
-                      itemBuilder: (context, index) {
-                        final rule = rules[index];
-                        return Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(
-                                    Icons.circle,
-                                    size: 8,
-                                    color: Colors.black,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      rule,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Divider(),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                ),
               ),
-            );
-          },
+              Text(
+                "All Property Rules & Info",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: rules.map((rule) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                "- $rule",
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+            ],
+          ),
         );
       },
     );
   }
 
   void _showFacilitiesBottomSheet(
-    BuildContext context,
-    List<String> facilities,
-  ) {
+      BuildContext context,
+      List<String> facilities,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -750,90 +627,217 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          builder: (_, scrollController) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 50,
+                  height: 5,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const Text(
+                "All facilities",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: facilities.map((facility) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          "- $facility",
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String formatDateDisplay(DateTime date) {
+    return DateFormat("d MMM yyyy").format(date);
+  }
+
+  void _showDateSelectionBottomSheet(BuildContext context, Datas hotel) {
+    DateTime checkIn = DateTime.tryParse(LocalStorages().getCheckIn() ?? "") ?? DateTime.now();
+    DateTime checkOut = DateTime.tryParse(LocalStorages().getCheckOut() ?? "") ?? DateTime.now().add(const Duration(days: 1));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top handle
                   Center(
                     child: Container(
                       width: 50,
                       height: 5,
-                      margin: const EdgeInsets.only(bottom: 10),
+                      margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
                         color: Colors.grey[300],
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                   ),
-                  Row(
-                    children: [
-                      const Icon(Icons.apartment, color: Colors.orange),
-                      const SizedBox(width: 8),
-                      const Text(
-                        "All Facilities",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    "Select Check-In & Check-Out Dates",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
 
-                  // Facility list/grid
-                  Expanded(
-                    child: GridView.builder(
-                      controller: scrollController,
-                      itemCount: facilities.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 1,
-                            mainAxisSpacing: 10,
-                            crossAxisSpacing: 10,
-                            childAspectRatio: 8,
+                  // Check-In
+                  GestureDetector(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: checkIn,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (picked != null) {
+                        setSheetState(() {
+                          checkIn = picked;
+                          if (!checkOut.isAfter(checkIn)) {
+                            checkOut = checkIn.add(const Duration(days: 1));
+                          }
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.black.withValues(alpha: 0.05),
+                        border: Border.all(color: Colors.orange),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today, color: Colors.orange, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Check-In", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                Text(formatDateDisplay(checkIn), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
                           ),
-                      itemBuilder: (context, index) {
-                        final facility = facilities[index];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Column(
-                            children: [
-                              Divider(),
-                              Row(
-                                children: [
-                                  Container(
-                                    height: 5,
-                                    width: 5,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                  SizedBox(width: 5),
-                                  Text(
-                                    facility,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                          const Icon(Icons.chevron_right),
+                        ],
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 12),
+
+                  // Check-Out
+                  GestureDetector(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: checkOut,
+                        firstDate: checkIn.add(const Duration(days: 1)),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (picked != null) {
+                        setSheetState(() {
+                          checkOut = picked;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.black.withValues(alpha: 0.05),
+                        border: Border.all(color: Colors.orange),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today, color: Colors.orange, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Check-Out", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                Text(formatDateDisplay(checkOut), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.chevron_right, color: AppTheme.black.withValues(alpha: 0.5),),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Confirm Button
+                  AppButton(title: "Confirm & Select Rooms", onTap: () {
+                    LocalStorages().saveCheckIn(
+                      checkIn: DateFormat("yyyy-MM-dd").format(checkIn),
+                    );
+                    LocalStorages().saveCheckOut(
+                      checkOut: DateFormat("yyyy-MM-dd").format(checkOut),
+                    );
+
+                    LocalStorages().savehotelName(
+                      hotelName: hotel.translatedName ?? "",
+                    );
+                    LocalStorages().savehotelAddress(
+                      hotelAddress: hotel.translatedAddress ?? "",
+                    );
+
+                    Navigator.pop(context);
+
+                    Get.to(
+                      RoomListScreen(
+                        id: hotel.id ?? 0,
+                        checkIn: DateFormat("yyyy-MM-dd").format(checkIn),
+                        checkOut: DateFormat("yyyy-MM-dd").format(checkOut),
+                        hotelName: hotel.translatedName ?? hotel.name ?? "",
+                      ),
+                    );
+                  },),
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
                 ],
               ),
             );

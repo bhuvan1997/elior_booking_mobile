@@ -81,13 +81,14 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       drawer: const AppDrawer(),
-
       appBar: AppBar(
         elevation: 0,
+        iconTheme: const IconThemeData(
+          color: Colors.black,
+        ),
         backgroundColor: Colors.transparent,
-        title: Image.asset(AssetsScreen.eliordasAppLogo, height: 60),
-
-        // centerTitle: true,
+        title: Image.asset(AssetsScreen.eliordasAppLogo, height: 40),
+        centerTitle: true,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -96,9 +97,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
         ],
       ),
 
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.blue))
-          : RefreshIndicator(
+      body: RefreshIndicator(
               onRefresh: () async {
                 await fetchBookingHotels();
                 await travelfetchBookingHotels();
@@ -213,10 +212,25 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: bookingHistoryModel.data!.length,
+        itemCount: bookingHistoryModel.data?.length ?? 0,
         separatorBuilder: (_, __) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
           final trip = bookingHistoryModel.data![index];
+          if (bookingHistoryModel.data == null || bookingHistoryModel.data!.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  "No trips found",
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            );
+          }
           return SizedBox(
             width: 240,
             child: _displayCard(
@@ -252,96 +266,99 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
     }
 
     return SizedBox(
-      height: 260,
-      child: ListView.builder(
+      height: 225,
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: bookingHistoryModel.data!.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 16,),
         itemBuilder: (context, index) {
           final trip = bookingHistoryModel.data![index];
 
-          return GestureDetector(
-            onTap: () => Get.to(
-              () => TripDetailScreen(id: trip.id ?? 0, fac: trip.name ?? ""),
-            ),
-            child: Card(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              clipBehavior: Clip.antiAlias,
-              color: Colors.white,
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width / 2 - 20,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // IMAGE
-                    Image.network(
-                      trip.images?.isNotEmpty == true
-                          ? trip.images!.first
-                          : 'https://via.placeholder.com/400x200.png?text=No+Image',
-                      height: 120,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
+          return SizedBox(width: 240, child: _displayCard(imageUrl: trip.images!.first, tripName: trip.name ?? "Unnamed Trip", tripAddress: trip.address ?? "", tripCurrency: trip.currency ?? "XOF", pricePerNight: trip.pricePerNight ?? 0, starRating: trip.starRating ?? 0));
 
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            trip.name ?? "Unnamed Hotel",
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.location_on,
-                                size: 14,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  trip.address ?? "",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 6),
-
-                          Text(
-                            "${trip.currency ?? "INR"} ${trip.pricePerNight ?? 0} /Night",
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
+          // return GestureDetector(
+          //   onTap: () => Get.to(
+          //     () => TripDetailScreen(id: trip.id ?? 0, fac: trip.name ?? ""),
+          //   ),
+          //   child: Card(
+          //     margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          //     elevation: 4,
+          //     shape: RoundedRectangleBorder(
+          //       borderRadius: BorderRadius.circular(16),
+          //     ),
+          //     clipBehavior: Clip.antiAlias,
+          //     color: Colors.white,
+          //     child: SizedBox(
+          //       width: MediaQuery.of(context).size.width / 2 - 20,
+          //       child: Column(
+          //         crossAxisAlignment: CrossAxisAlignment.start,
+          //         children: [
+          //           // IMAGE
+          //           Image.network(
+          //             trip.images?.isNotEmpty == true
+          //                 ? trip.images!.first
+          //                 : 'https://via.placeholder.com/400x200.png?text=No+Image',
+          //             height: 120,
+          //             width: double.infinity,
+          //             fit: BoxFit.cover,
+          //           ),
+          //
+          //           Padding(
+          //             padding: const EdgeInsets.all(10),
+          //             child: Column(
+          //               crossAxisAlignment: CrossAxisAlignment.start,
+          //               children: [
+          //                 Text(
+          //                   trip.name ?? "Unnamed Hotel",
+          //                   style: GoogleFonts.poppins(
+          //                     fontWeight: FontWeight.w600,
+          //                     fontSize: 15,
+          //                   ),
+          //                   maxLines: 1,
+          //                   overflow: TextOverflow.ellipsis,
+          //                 ),
+          //
+          //                 const SizedBox(height: 4),
+          //                 Row(
+          //                   children: [
+          //                     const Icon(
+          //                       Icons.location_on,
+          //                       size: 14,
+          //                       color: Colors.grey,
+          //                     ),
+          //                     const SizedBox(width: 4),
+          //                     Expanded(
+          //                       child: Text(
+          //                         trip.address ?? "",
+          //                         style: GoogleFonts.poppins(
+          //                           fontSize: 12,
+          //                           color: Colors.grey,
+          //                         ),
+          //                         overflow: TextOverflow.ellipsis,
+          //                       ),
+          //                     ),
+          //                   ],
+          //                 ),
+          //
+          //                 const SizedBox(height: 6),
+          //
+          //                 Text(
+          //                   "${trip.currency ?? "INR"} ${trip.pricePerNight ?? 0} /Night",
+          //                   style: GoogleFonts.poppins(
+          //                     fontWeight: FontWeight.w600,
+          //                     fontSize: 14,
+          //                     color: Colors.black,
+          //                   ),
+          //                 ),
+          //               ],
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //     ),
+          //   ),
+          // );
         },
       ),
     );

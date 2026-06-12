@@ -1,3 +1,4 @@
+import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/auth/spalash_screen.dart';
 import 'package:elior/review_screen.dart';
 import 'package:elior/ticket_history.dart';
@@ -58,6 +59,7 @@ class _MyAppState extends State<MyApp> {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       translations: AppTranslations(),
+      theme: MyThemes.lightTheme,
       // ✅ use GetX translations
       locale: _locale,
       fallbackLocale: const Locale('en'),

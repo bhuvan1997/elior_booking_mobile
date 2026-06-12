@@ -146,26 +146,6 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
                                 },
                               ),
                             ),
-
-                          // TextFormField(
-                          //   controller: controller.searchLocation,
-                          //   onChanged: controller.fetchSuggestions,
-                          //   decoration: InputDecoration(
-                          //     hintText: "Hotel, area name",
-                          //     prefixIcon: const Icon(
-                          //       Icons.location_on_outlined,
-                          //     ),
-                          //     border: OutlineInputBorder(
-                          //       borderRadius: BorderRadius.circular(10),
-                          //     ),
-                          //   ),
-                          //   validator: (value) {
-                          //     if (value == null || value.trim().isEmpty) {
-                          //       return "Please enter location";
-                          //     }
-                          //     return null;
-                          //   },
-                          // ),
                           const SizedBox(height: 16),
 
                           Row(
@@ -249,24 +229,6 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
     );
   }
 
-  Widget _dateField({
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          prefixIcon: const Icon(Icons.calendar_today_outlined),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        child: Text(value, style: const TextStyle(fontSize: 15)),
-      ),
-    );
-  }
-
   // Date picker logic
   Future<void> _selectDate(
       BuildContext context, {
@@ -282,36 +244,63 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
       return;
     }
 
+    DateTime? initialCheckOutDate = controller.checkInDate?.add(const Duration(days: 1));
+
     final picked = await showDatePicker(
       context: context,
 
-      // Check-In picker
-      initialDate: isCheckIn
-          ? DateTime.now()
-          : controller.checkInDate!,
+      // For check-in: initial date is today or current check-in date if exists
+      // For check-out: initial date is the selected check-in date
 
-      // Disable previous dates
+
+
+      initialDate: isCheckIn
+          ? (controller.checkInDate ?? DateTime.now())
+          : (controller.checkOutDate ?? initialCheckOutDate),
+
+      // For check-in: first available date is today
+      // For check-out: first available date is the selected check-in date
       firstDate: isCheckIn
           ? DateTime.now()
           : controller.checkInDate!,
 
       lastDate: DateTime(2100),
+
+      // Optional: Set initial date to check-in if user is selecting check-out
+      // and no check-out date is selected yet
+      initialEntryMode: DatePickerEntryMode.calendar,
     );
 
     if (picked == null) return;
 
     final formattedDate = DateFormat('dd MMM yyyy').format(picked);
 
-    if (isCheckIn) {
-      controller.checkInDate = picked;
-      checkInController.text = formattedDate;
+    // Additional validation: Check-out must be after check-in
+    if (!isCheckIn && picked.isBefore(controller.checkInDate!)) {
+      Get.snackbar(
+        "Invalid Date",
+        "Check-out date cannot be before check-in date. Please select a date after ${DateFormat('dd MMM yyyy').format(controller.checkInDate!)}",
+      );
+      return;
+    }
 
-      // Reset checkout if checkin changes
-      controller.checkOutDate = null;
-      checkOutController.clear();
+    if (isCheckIn) {
+      // If user selects check-in date, reset check-out if it's before the new check-in date
+      setState(() {
+        controller.checkInDate = picked;
+        checkInController.text = formattedDate;
+
+        // If existing check-out date is before new check-in date, clear it
+        if (controller.checkOutDate != null && controller.checkOutDate!.isBefore(picked)) {
+          controller.checkOutDate = null;
+          checkOutController.clear();
+        }
+      });
     } else {
-      controller.checkOutDate = picked;
-      checkOutController.text = formattedDate;
+      setState(() {
+        controller.checkOutDate = picked;
+        checkOutController.text = formattedDate;
+      });
     }
 
     controller.update();

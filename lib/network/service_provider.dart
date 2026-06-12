@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:elior/app_values/app_theme.dart';
+import 'package:elior/constatnt/assets_image.dart';
 import 'package:elior/response_model/booking_history_details.dart';
 import 'package:elior/response_model/booking_history_response.dart';
 import 'package:elior/response_model/bus_seat_model.dart';
@@ -17,6 +19,7 @@ import 'package:elior/response_model/transport_response/proceed_model.dart';
 import 'package:elior/response_model/verify_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 
 import '../response_model/booking_payment_detail_response.dart';
@@ -1313,14 +1316,53 @@ Future<FInalPaymentModel> payFinalHotelPaymentApi({
     );
   }
 
-  showLoader() {
+  void showLoader() {
     Get.dialog(
-      barrierDismissible: true,
-      const AbsorbPointer(
+      PopScope(
+        canPop: false,
         child: Center(
-          child: CircularProgressIndicator(color: Colors.blueAccent),
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 300,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(borderRadius: BorderRadius.circular(12), child: Image(image: AssetImage(AssetsScreen.eliorAppLogo), width: 60, height: 60,)),
+                  const SizedBox(height: 16),
+                  CircularProgressIndicator(
+                    color: AppTheme.appThemeColor,
+                    strokeWidth: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Loading...",
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
+      barrierDismissible: false,
+      barrierColor: Colors.black45,
     );
   }
 
