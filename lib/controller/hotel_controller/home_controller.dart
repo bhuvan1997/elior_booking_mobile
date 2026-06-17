@@ -1,3 +1,5 @@
+import 'package:elior/response_model/home_stay_respnse/homestay_suggestion_response.dart';
+import 'package:elior/response_model/property/property_search_response.dart';
 import 'package:elior/response_model/search_hotel_response.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -9,8 +11,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../response_model/hotel_suggestion_model.dart';
+
 class HomeController extends GetxController {
-  SearchHotelModel searchHotelModel = SearchHotelModel();
+  PropertySearchResponse searchHotelModel = PropertySearchResponse();
   TextEditingController searchLocation = TextEditingController();
   DateTime? checkInDate;
   DateTime? checkOutDate;
@@ -26,21 +29,37 @@ class HomeController extends GetxController {
 
   Future searchHotel() async {
     try {
-      searchHotelModel = await ServiceProvider().searchHotelApi(
-        search: searchLocation.text.trim(),
-        startDate: formatDate(checkInDate),
-        endDate: formatDate(checkOutDate),
-        // person: guestsCount,
-        // rooms: roomsCount,
-      );
+
+      if (slug == "hotel") {
+        searchHotelModel = await ServiceProvider().searchHotelApi(
+          search: searchLocation.text.trim(),
+          startDate: formatDate(checkInDate),
+          endDate: formatDate(checkOutDate),
+          // person: guestsCount,
+          // rooms: roomsCount,
+        );
+      } else {
+        searchHotelModel = await ServiceProvider().searchHomeStayApi(
+          search: searchLocation.text.trim(),
+          startDate: formatDate(checkInDate),
+          endDate: formatDate(checkOutDate),
+          // person: guestsCount,
+          // rooms: roomsCount,
+        );
+      }
     } catch (e) {
       print('Error occurred: $e');
     }
   }
 
-  List<HotelSuggestion> suggestions = [];
+  List<dynamic> suggestions = [];
   bool isSuggestionLoading = false;
   Timer? debounce;
+
+  String? slug;
+  void setSlug(String args) {
+    slug = args;
+  }
 
   Future<void> fetchSuggestions(String query) async {
     if (query.isEmpty) {
@@ -56,17 +75,23 @@ class HomeController extends GetxController {
         isSuggestionLoading = true;
         update();
 
-        final response = await http.get(
-          Uri.parse(
-              "https://eliorbooking.com/api/search/hotel-suggestions?q=$query"),
-        );
+        if (slug == "hotel") {
+          final response = await http.get(
+            Uri.parse(
+              "https://eliorbooking.com/api/search/hotel-suggestions?q=$query",
+            ),
+          );
 
-        if (response.statusCode == 200) {
-          List data = jsonDecode(response.body);
-          suggestions =
-              data.map((e) => HotelSuggestion.fromJson(e)).toList();
+          if (response.statusCode == 200) {
+            List data = jsonDecode(response.body);
+            suggestions = data.map((e) => HotelSuggestion.fromJson(e)).toList();
+          } else {
+            suggestions = [];
+          }
         } else {
-          suggestions = [];
+          final response = await ServiceProvider().fetchHomestaysSuggestions(query);
+          HomestaySuggestionResponse data = response;
+          suggestions = data.suggestions?.map((e) => HomestaySuggestion.fromJson(e)).toList() ?? [];
         }
       } catch (e) {
         suggestions = [];

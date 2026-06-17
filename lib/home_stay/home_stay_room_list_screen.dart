@@ -1,6 +1,11 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:elior/app_values/app_theme.dart';
+import 'package:elior/hotel_booking/booking_detail.dart';
+import 'package:elior/widgets/app_button.dart';
+import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../network/service_provider.dart';
 import '../response_model/home_stay_respnse/accomendation_booking_screen.dart';
@@ -49,8 +54,8 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
     }
   }
 
-  AccomendationBookingModel accomendationBookingModel =
-      AccomendationBookingModel();
+  AccommodationBookingModel accomendationBookingModel =
+      AccommodationBookingModel();
 
   Future<void> bookConfirm({
     required String id,
@@ -94,16 +99,7 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
     final rooms = roomAvailableModel?.data ?? [];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6FDF7),
-      appBar: AppBar(
-        backgroundColor: Colors.green.shade700,
-        centerTitle: true,
-        elevation: 0,
-        title: Text(
-          "🏡${widget.homeName}",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
+      appBar: getAppBar(context, widget.homeName),
       body: rooms.isEmpty == true
           ? Center(
               child: Text(
@@ -170,15 +166,37 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
                         ),
 
                         const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              room.accomodationName ?? "Room",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.black,
+                              ),
+                            ),
 
-                        /// ✅ Room Name
-                        Text(
-                          room.accomodationName ?? "Room",
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              child: Text(
+                                "Available",
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 6),
 
@@ -207,77 +225,26 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
                           children: [
                             Text(
                               "${room.currency ?? ''} ${room.pricePerNight ?? 0} + ${room.currency ?? ''} ${room.tax} Taxes & fees per night",
-                              style: const TextStyle(
-                                fontSize: 14,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                                color: AppTheme.black,
                               ),
                             ),
-                            // if (room.tax != null)
-                            //   Text(
-                            //     "Tax: ${room.tax}",
-                            //     style: const TextStyle(
-                            //       fontSize: 13,
-                            //       color: Colors.grey,
-                            //     ),
-                            //   ),
                           ],
                         ),
-                        // XOF 1000 + XOF 0.00 Taxes & fees per night
-                        const SizedBox(height: 6),
-
-                        /// ✅ Availability Info
-                        Text(
-                          "Available",
-                          style: TextStyle(
-                            color: availableRooms > 0
-                                ? Colors.green
-                                : Colors.red,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
 
                         /// ✅ Book Now Button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green.shade700,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            onPressed: () {
-                              _showBookingBottomSheet(
-                                context,
-                                room,
-                                room.images ?? [],
-                              );
-                              // bookConfirm(
-                              //   id: room.propertyId.toString(),
-                              //   checkIn: LocalStorages().getCheckIn() ?? "",
-                              //   checkOut: LocalStorages().getCheckOut() ?? "",
-                              //   acc: room.accomodationName ?? "",
-                              //   person: room.guest ?? 0,
-                              // ).whenComplete(() {
-                              //   if (accomendationBookingModel.status == true) {
-                              //     var homeBooking = accomendationBookingModel.data;
-                              //     print("Successs");
-                              //
-                              //     Get.to(ReviewHomeBookingScreen(),arguments:homeBooking );
-                              //   }
-                              // });
-                            },
-                            child: Text(
-                              availableRooms > 0 ? "Book Now" : "Sold Out",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                        AppButton(
+                          title: availableRooms > 0 ? "Book Now" : "Sold Out",
+                          onTap: () {
+                            _showBookingBottomSheet(
+                              context,
+                              room,
+                              room.images ?? [],
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -362,17 +329,16 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
                       ).whenComplete(() {
                         if (accomendationBookingModel.status == true) {
                           var homeBooking = accomendationBookingModel.data;
-                          print("Successs");
 
                           Get.to(
-                            ReviewHomeBookingScreen(),
-                            arguments: homeBooking,
+                            ReviewBookingScreen(),
+                            arguments: homeBooking?.toBookingData(),
                           );
                         }
                       });
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade700,
+                      backgroundColor: AppTheme.appThemeColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),

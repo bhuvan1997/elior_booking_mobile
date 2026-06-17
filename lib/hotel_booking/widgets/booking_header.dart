@@ -1,9 +1,10 @@
+import 'package:elior/response_model/booking_data.dart';
 import 'package:flutter/material.dart';
 import 'package:elior/utils/project_utils.dart';
 import 'package:elior/utils/storage.dart';
 
 class BookingHeader extends StatelessWidget {
-  final dynamic hotelBooking;
+  final BookingData hotelBooking;
 
   const BookingHeader({super.key, required this.hotelBooking});
 
@@ -17,8 +18,8 @@ class BookingHeader extends StatelessWidget {
           child: getImage(
             height: 80,
             width: 80,
-            url: (hotelBooking.hotelImages?.isNotEmpty ?? false)
-                ? hotelBooking.hotelImages![0]
+            url: (hotelBooking.propertyImages?.isNotEmpty ?? false)
+                ? hotelBooking.propertyImages![0]
                 : "https://via.placeholder.com/120",
           ),
         ),

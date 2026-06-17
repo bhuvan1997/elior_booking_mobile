@@ -1,3 +1,4 @@
+import 'package:elior/response_model/nearby_properties_response.dart';
 import 'package:elior/response_model/top_hotel_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -6,6 +7,7 @@ import '../../network/service_provider.dart';
 
 class TopHotelController extends GetxController {
   TopHotelModel topHotelModel = TopHotelModel();
+  NearbyPropertiesResponse nearbyProperties = NearbyPropertiesResponse();
 
   @override
   void onInit() {
@@ -23,5 +25,13 @@ class TopHotelController extends GetxController {
       debugPrint('Statelistdata error: $e');
     }
 
+  }
+
+  Future<void> fetchNearby() async {
+    try {
+      nearbyProperties = await ServiceProvider().getNearbyProperties();
+    } catch (e) {
+      debugPrint('Statelistdata error: $e');
+    }
   }
 }

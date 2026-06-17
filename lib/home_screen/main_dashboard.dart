@@ -47,6 +47,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       fetchBookingHotels();
       travelfetchBookingHotels();
+      controller.fetchNearby();
     });
   }
 
@@ -83,9 +84,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
       drawer: const AppDrawer(),
       appBar: AppBar(
         elevation: 0,
-        iconTheme: const IconThemeData(
-          color: Colors.black,
-        ),
+        iconTheme: const IconThemeData(color: Colors.black),
         backgroundColor: Colors.transparent,
         title: Image.asset(AssetsScreen.eliordasAppLogo, height: 40),
         centerTitle: true,
@@ -98,52 +97,46 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
       ),
 
       body: RefreshIndicator(
-              onRefresh: () async {
-                await fetchBookingHotels();
-                await travelfetchBookingHotels();
-              },
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 10),
-                    _buildCategoryRow(),
-                    const SizedBox(height: 20),
+        onRefresh: () async {
+          await fetchBookingHotels();
+          await travelfetchBookingHotels();
+        },
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 10),
+              _buildCategoryRow(),
+              const SizedBox(height: 20),
 
-                    _buildSectionHeader(
-                      "Nearby Properties",
-                      icon: Icons.navigation,
-                    ),
-                    _buildNearbyPropertiesCarousel(),
-                    const SizedBox(height: 20),
+              _buildSectionHeader("Nearby Properties", icon: Icons.navigation),
+              _buildNearbyPropertiesCarousel(),
+              const SizedBox(height: 20),
 
-                    _buildSectionHeader(
-                      "Offers Available",
-                      icon: Icons.local_offer,
-                    ),
+              _buildSectionHeader("Offers Available", icon: Icons.local_offer),
 
-                    _buildOffersSection(),
-                    const SizedBox(height: 20),
+              _buildOffersSection(),
+              const SizedBox(height: 20),
 
-                    _buildSectionHeader(
-                      "Top Rated Hotels",
-                      icon: Icons.airplane_ticket,
-                    ),
-                    _buildTripCarousel(),
-
-                    const SizedBox(height: 25),
-
-                    _buildSectionHeader(
-                      "Your Daily Travel Blogs",
-                      icon: Icons.explore,
-                    ),
-                    _buildTravelBlogCarousel(),
-
-                    const SizedBox(height: 100),
-                  ],
-                ),
+              _buildSectionHeader(
+                "Top Rated Hotels",
+                icon: Icons.airplane_ticket,
               ),
-            ),
+              _buildTripCarousel(),
+
+              const SizedBox(height: 25),
+
+              _buildSectionHeader(
+                "Your Daily Travel Blogs",
+                icon: Icons.explore,
+              ),
+              _buildTravelBlogCarousel(),
+
+              const SizedBox(height: 100),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -158,7 +151,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
               icon: Icons.hotel_outlined,
               label: "Hotels",
               iconColor: const Color(0xff2140C0),
-              onTap: () => Get.to(HotelHomeSearchScreen()),
+              onTap: () => Get.to(HotelHomeSearchScreen(), arguments: "hotel"),
             ),
           ),
           const SizedBox(width: 8),
@@ -167,7 +160,8 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
               icon: Icons.home_outlined,
               label: "Homestays",
               iconColor: Colors.red,
-              onTap: () => Get.to(HomeStayScreen()),
+              onTap: () =>
+                  Get.to(HotelHomeSearchScreen(), arguments: "homestay"),
             ),
           ),
           const SizedBox(width: 8),
@@ -197,7 +191,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
             style: GoogleFonts.poppins(
               color: AppTheme.black,
               fontWeight: FontWeight.w600,
-              fontSize: 18,
+              fontSize: 16,
             ),
           ),
         ],
@@ -212,16 +206,17 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: bookingHistoryModel.data?.length ?? 0,
+        itemCount: controller.nearbyProperties.data?.length ?? 0,
         separatorBuilder: (_, __) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
-          final trip = bookingHistoryModel.data![index];
-          if (bookingHistoryModel.data == null || bookingHistoryModel.data!.isEmpty) {
+          final nearbyProperties = controller.nearbyProperties;
+          final property = nearbyProperties.data![index];
+          if (nearbyProperties.data == null || nearbyProperties.data!.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Text(
-                  "No trips found",
+                  "No Nearby properties found",
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     color: Colors.grey,
@@ -234,12 +229,13 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
           return SizedBox(
             width: 240,
             child: _displayCard(
-              imageUrl: trip.images!.first,
-              tripName: trip.name ?? "Unnamed hotel",
-              tripAddress: trip.address ?? "N/A",
-              tripCurrency: trip.currency ?? "XOF",
-              pricePerNight: trip.pricePerNight ?? 0,
-              starRating: trip.starRating ?? 0,
+              imageUrl: property.images!.first,
+              tripName: property.name ?? "Unnamed hotel",
+              tripAddress: property.address ?? "N/A",
+              tripCurrency: property.currency ?? "XOF",
+              pricePerNight: property.pricePerNight ?? 0,
+              starRating: property.starRating ?? 0,
+              onTap: () => property.navigateToDetail(context),
             ),
           );
         },
@@ -271,94 +267,22 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: bookingHistoryModel.data!.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 16,),
+        separatorBuilder: (_, _) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
           final trip = bookingHistoryModel.data![index];
 
-          return SizedBox(width: 240, child: _displayCard(imageUrl: trip.images!.first, tripName: trip.name ?? "Unnamed Trip", tripAddress: trip.address ?? "", tripCurrency: trip.currency ?? "XOF", pricePerNight: trip.pricePerNight ?? 0, starRating: trip.starRating ?? 0));
-
-          // return GestureDetector(
-          //   onTap: () => Get.to(
-          //     () => TripDetailScreen(id: trip.id ?? 0, fac: trip.name ?? ""),
-          //   ),
-          //   child: Card(
-          //     margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          //     elevation: 4,
-          //     shape: RoundedRectangleBorder(
-          //       borderRadius: BorderRadius.circular(16),
-          //     ),
-          //     clipBehavior: Clip.antiAlias,
-          //     color: Colors.white,
-          //     child: SizedBox(
-          //       width: MediaQuery.of(context).size.width / 2 - 20,
-          //       child: Column(
-          //         crossAxisAlignment: CrossAxisAlignment.start,
-          //         children: [
-          //           // IMAGE
-          //           Image.network(
-          //             trip.images?.isNotEmpty == true
-          //                 ? trip.images!.first
-          //                 : 'https://via.placeholder.com/400x200.png?text=No+Image',
-          //             height: 120,
-          //             width: double.infinity,
-          //             fit: BoxFit.cover,
-          //           ),
-          //
-          //           Padding(
-          //             padding: const EdgeInsets.all(10),
-          //             child: Column(
-          //               crossAxisAlignment: CrossAxisAlignment.start,
-          //               children: [
-          //                 Text(
-          //                   trip.name ?? "Unnamed Hotel",
-          //                   style: GoogleFonts.poppins(
-          //                     fontWeight: FontWeight.w600,
-          //                     fontSize: 15,
-          //                   ),
-          //                   maxLines: 1,
-          //                   overflow: TextOverflow.ellipsis,
-          //                 ),
-          //
-          //                 const SizedBox(height: 4),
-          //                 Row(
-          //                   children: [
-          //                     const Icon(
-          //                       Icons.location_on,
-          //                       size: 14,
-          //                       color: Colors.grey,
-          //                     ),
-          //                     const SizedBox(width: 4),
-          //                     Expanded(
-          //                       child: Text(
-          //                         trip.address ?? "",
-          //                         style: GoogleFonts.poppins(
-          //                           fontSize: 12,
-          //                           color: Colors.grey,
-          //                         ),
-          //                         overflow: TextOverflow.ellipsis,
-          //                       ),
-          //                     ),
-          //                   ],
-          //                 ),
-          //
-          //                 const SizedBox(height: 6),
-          //
-          //                 Text(
-          //                   "${trip.currency ?? "INR"} ${trip.pricePerNight ?? 0} /Night",
-          //                   style: GoogleFonts.poppins(
-          //                     fontWeight: FontWeight.w600,
-          //                     fontSize: 14,
-          //                     color: Colors.black,
-          //                   ),
-          //                 ),
-          //               ],
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-          //     ),
-          //   ),
-          // );
+          return SizedBox(
+            width: 240,
+            child: _displayCard(
+              imageUrl: trip.images!.first,
+              tripName: trip.name ?? "Unnamed Trip",
+              tripAddress: trip.address ?? "",
+              tripCurrency: trip.currency ?? "XOF",
+              pricePerNight: trip.pricePerNight ?? 0,
+              starRating: trip.starRating ?? 0,
+              onTap: () {},
+            ),
+          );
         },
       ),
     );
@@ -371,113 +295,105 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
     required String tripCurrency,
     required num pricePerNight,
     required num starRating,
+    required VoidCallback onTap,
   }) {
-    if (bookingHistoryModel.data == null || bookingHistoryModel.data!.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(
-            "No trips found",
-            style: GoogleFonts.poppins(
-              fontSize: 15,
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.1)),
         ),
-      );
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+              child: getImage(
+                height: 120,
+                width: double.infinity,
+                url: imageUrl,
+              ),
             ),
-            child: getImage(height: 120, width: double.infinity, url: imageUrl),
-          ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0),
-            child: Column(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tripName,
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on,
-                          size: 14,
-                          color: Colors.grey,
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6.0),
+              child: Column(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tripName,
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
                         ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            tripAddress,
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.grey,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            size: 14,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              tripAddress,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Divider(
-                  color: Colors.grey.withValues(alpha: 0.4),
-                  thickness: 1,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "$tripCurrency $pricePerNight/Night",
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Colors.black,
+                        ],
                       ),
-                    ),
-
-                    Row(
-                      children: [
-                        Icon(Icons.star, color: Colors.amberAccent, size: 16),
-                        Text(
-                          "$starRating.0",
-                          style: GoogleFonts.poppins(
-                            color: AppTheme.black,
-                            fontWeight: FontWeight.w500,
-                          ),
+                    ],
+                  ),
+                  Divider(
+                    color: Colors.grey.withValues(alpha: 0.4),
+                    thickness: 1,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "$tripCurrency $pricePerNight/Night",
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Colors.black,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+                      ),
+
+                      Row(
+                        children: [
+                          Icon(Icons.star, color: Colors.amberAccent, size: 16),
+                          Text(
+                            "$starRating.0",
+                            style: GoogleFonts.poppins(
+                              color: AppTheme.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -526,7 +442,10 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
                       gradient: LinearGradient(
                         begin: AlignmentGeometry.bottomCenter,
                         end: Alignment.topCenter,
@@ -597,7 +516,11 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
             },
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: Colors.white, border: Border.all(color: Colors.black.withValues(alpha: 0.1))),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: Colors.white,
+                border: Border.all(color: Colors.black.withValues(alpha: 0.1)),
+              ),
               child: SizedBox(
                 width: 260,
                 child: Column(
@@ -608,7 +531,11 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
                         topLeft: Radius.circular(12),
                         topRight: Radius.circular(12),
                       ),
-                      child: getImage(height: 120, width: double.infinity, url: blog.coverImage),
+                      child: getImage(
+                        height: 120,
+                        width: double.infinity,
+                        url: blog.coverImage,
+                      ),
                     ),
 
                     Padding(

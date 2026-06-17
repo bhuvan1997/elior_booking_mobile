@@ -4,6 +4,7 @@ import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/constatnt/assets_image.dart';
 import 'package:elior/response_model/fav_model/add_fav_moodel.dart';
 import 'package:elior/response_model/filter_model.dart';
+import 'package:elior/response_model/property/property_search_response.dart';
 import 'package:elior/utils/project_utils.dart';
 import 'package:elior/widgets/app_button.dart';
 import 'package:elior/widgets/toolbar.dart';
@@ -21,21 +22,21 @@ import '../utils/translator_service.dart';
 import 'hotel_home_search_screen.dart';
 import 'hotel_detail.dart';
 
-class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+class HotelHomeResultScreen extends StatefulWidget {
+  const HotelHomeResultScreen({super.key});
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  State<HotelHomeResultScreen> createState() => _HotelHomeResultScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
-  late final SearchHotelModel model;
+class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
+  late final PropertySearchResponse model;
   late final TextEditingController _searchController;
   late final TextEditingController locationController;
   late final TextEditingController checkInController;
   late final TextEditingController checkOutController;
 
-  List<Data> filteredHotels = [];
+  List<Property> filteredHotels = [];
   DateTime? checkInDate;
   DateTime? checkOutDate;
 
@@ -45,7 +46,7 @@ class _SearchScreenState extends State<SearchScreen> {
   String selectedSort = 'Price: Low to High';
 
   Set<int> favoriteIds = {};
-  SearchHotelModel searchHotelModel = SearchHotelModel();
+  PropertySearchResponse searchHotelModel = PropertySearchResponse();
   FilterModel filterModel = FilterModel();
   SelectFaModel selectFaModel = SelectFaModel();
   SearchFilterModel searchFilterModel = SearchFilterModel();
@@ -53,12 +54,14 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Timer? _debounce;
 
-  final PageController _pageController = PageController();
+  String? slug;
 
   @override
   void initState() {
     super.initState();
-    model = Get.arguments;
+    Map<String, dynamic> args = Get.arguments;
+    model = args["model"];
+    slug = args["slug"];
     _initializeControllers();
     _initializeDates();
     _initializeFilteredHotels();
@@ -253,16 +256,17 @@ class _SearchScreenState extends State<SearchScreen> {
     try {
       final result = await ServiceProvider().searchFilterApi(
         search: locationController.text.trim(),
-        startDate: checkInDate != null ? _formatDateForApi(checkInDate!) : null ?? "",
-        endDate: checkOutDate != null ? _formatDateForApi(checkOutDate!) : null ?? "",
+        startDate: checkInDate != null ? _formatDateForApi(checkInDate!) : "",
+        endDate: checkOutDate != null ? _formatDateForApi(checkOutDate!) : "",
         starRatings: stars,
         amenities: features,
         rules: rules,
         pricing: pricing,
       );
 
+      // FIX: Convert Datams to Property
       if (result.data?.isNotEmpty == true) {
-        filteredHotels = result.data!.map((d) => Data.fromDatam(d)).toList();
+        filteredHotels = result.data!.map((datams) => Property.fromDatam(datams)).toList();
         searchHotelModel.data = filteredHotels;
         await _translateHotels();
       } else {
@@ -283,13 +287,14 @@ class _SearchScreenState extends State<SearchScreen> {
     try {
       final result = await ServiceProvider().searchSortingApi(
         search: locationController.text.trim(),
-        startDate: checkInDate != null ? _formatDateForApi(checkInDate!) : null ?? "",
-        endDate: checkOutDate != null ? _formatDateForApi(checkOutDate!) : null ?? "",
+        startDate: checkInDate != null ? _formatDateForApi(checkInDate!) : "",
+        endDate: checkOutDate != null ? _formatDateForApi(checkOutDate!) : "",
         sort: sorting ?? "",
       );
 
       if (result.data?.isNotEmpty == true) {
-        filteredHotels = result.data!.map((d) => Data.fromDatams(d)).toList();
+        // If result.data is List<DataSort>, convert to Property
+        filteredHotels = result.data!.map((d) => Property.fromDataSort(d)).toList();
         searchHotelModel.data = filteredHotels;
         await _translateHotels();
       } else {
@@ -336,12 +341,13 @@ class _SearchScreenState extends State<SearchScreen> {
     Get.snackbar(title, message);
   }
 
-  void _navigateToHotelDetail(Data hotel) {
+  void _navigateToHotelDetail(Property hotel) {
     LocalStorages().saveCheckIn(checkIn: model.searchParams?.startDate ?? "");
     LocalStorages().saveCheckOut(checkOut: model.searchParams?.endDate ?? "");
-    Get.to(() => HotelDetailsScreen(
+    Get.to(() => UnifiedPropertyDetailsScreen(
       id: hotel.id ?? 0,
       fac: hotel.translatedDescription ?? "",
+      slug: slug ?? "hotel",
     ));
   }
 
@@ -542,7 +548,7 @@ class _SearchScreenState extends State<SearchScreen> {
       itemBuilder: (context, index) {
         final hotel = filteredHotels[index];
         return HotelCard(
-          data: hotel,
+          data: hotel, // This needs to accept Property, not Data
           isFavorite: favoriteIds.contains(hotel.id ?? 0),
           onTap: () => _navigateToHotelDetail(hotel),
           onFavoriteToggle: () => _toggleFavorite(hotel.id ?? 0),
@@ -551,103 +557,6 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildHotelCard(Data data) {
-    final isFavorite = favoriteIds.contains(data.id ?? 0);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 12, spreadRadius: 1, offset: const Offset(0, 6))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHotelImage(data.images, data.id ?? 0, isFavorite),
-          _buildHotelDetails(data),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHotelImage(List<String>? images, int hotelId, bool isFavorite) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      child: Stack(
-        children: [
-          SizedBox(
-            height: 200,
-            child: PageView.builder(controller: _pageController, itemCount: images?.length, itemBuilder: (context, index) {
-              return getImage(height: 200, width: double.infinity, url: images?[index]);
-            },),
-          ),
-          Container(
-            height: 200,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.black.withValues(alpha: 0.3), Colors.transparent],
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 12,
-            right: 12,
-            child: GestureDetector(
-              onTap: () => _toggleFavorite(hotelId),
-              child: CircleAvatar(
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : Colors.white),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHotelDetails(Data data) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(data.name ?? "", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              Row(
-                children: [
-                  Icon(Icons.star, size: 16, color: Colors.amber.shade600),
-                  const SizedBox(width: 4),
-                  Text("${data.starRating?.toString() ?? "0"}/5", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              const Icon(Icons.location_on, size: 16, color: Colors.grey),
-              const SizedBox(width: 4),
-              Expanded(child: Text("${data.city ?? ""}, ${data.country ?? ""}", style: const TextStyle(fontSize: 13, color: Colors.grey))),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text("Check-In: ${formatTime(data.checkInTime?.toString() ?? "")} | Check-out: ${formatTime(data.checkOutTime?.toString() ?? "")}"),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Text("${data.currency ?? ""}", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-              Text(" ${data.pricePerNight ?? ""} /Night", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildLocationField() {
     return Container(
@@ -949,7 +858,7 @@ class _SearchScreenState extends State<SearchScreen> {
 }
 
 class HotelTranslator {
-  static Future<void> translateHotels(List<Data> hotels, String langCode) async {
+  static Future<void> translateHotels(List<Property> hotels, String langCode) async {
     final translator = TranslationService();
     for (var hotel in hotels) {
       hotel.translatedName = await translator.translateText(hotel.name ?? "", langCode);
@@ -961,7 +870,7 @@ class HotelTranslator {
 }
 
 class HotelCard extends StatefulWidget {
-  final Data data;
+  final Property data;
   final bool isFavorite;
   final VoidCallback onTap;
   final VoidCallback onFavoriteToggle;

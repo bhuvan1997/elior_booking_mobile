@@ -1,8 +1,9 @@
+import 'package:elior/response_model/booking_data.dart';
 import 'package:flutter/material.dart';
 import 'package:elior/app_values/app_theme.dart';
 
 class PriceSummaryCard extends StatelessWidget {
-  final dynamic hotelBooking;
+  final BookingData hotelBooking;
   final double discount;
   final double priceAfterDiscount;
   final double taxes;

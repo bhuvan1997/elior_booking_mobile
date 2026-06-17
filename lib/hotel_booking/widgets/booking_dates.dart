@@ -1,8 +1,9 @@
+import 'package:elior/response_model/booking_data.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class BookingDates extends StatelessWidget {
-  final dynamic hotelBooking;
+  final BookingData hotelBooking;
 
   const BookingDates({super.key, required this.hotelBooking});
 

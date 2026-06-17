@@ -11,6 +11,7 @@ class ApiConstants {
   static const verifyEmail = '$baseUrl/verify-email';
   static const resetPassword = '$baseUrl/reset-password';
   static const searchHomeStay = '$baseUrl/search-homestay';
+  static String homestaySuggestions(String query) => '$baseUrl/search/homestay-suggestions?q=$query';
   static const bookHomeStayRoom =
       'https://eliorbooking.com/api/book-homestayrooms-by-id';
   static const searchBusRoute = '$baseUrl/search-bus-route';
@@ -39,5 +40,7 @@ class ApiConstants {
   static const review = '$baseUrl/submit-property-booking-review';
   static const busReview = '$baseUrl/submit-bus-booking-review';
   static const getMyNotification = '$baseUrl/get-my-notification';
+  static const getAllCoupons = '$baseUrl/get-all-coupons';
+  static const getNearbyProperties = '$baseUrl/get-properties-nearby';
 
 }

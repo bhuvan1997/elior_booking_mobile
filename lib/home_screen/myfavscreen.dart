@@ -125,7 +125,7 @@ class _MyFavScreenState extends State<MyFavScreen> {
           padding:  EdgeInsets.symmetric(horizontal: 6, vertical: 12),
           child:GestureDetector(
               onTap: () {
-                Get.to( HotelDetailsScreen(id: data.id??0, fac: data.name ?? ""));
+                Get.to( UnifiedPropertyDetailsScreen(id: data.id??0, fac: data.name ?? "", slug: "hotel",));
 
               },
 

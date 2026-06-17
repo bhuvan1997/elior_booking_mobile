@@ -64,7 +64,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
     }
   }
 
-  RoomBookingModel roomBookingModel = RoomBookingModel();
+  HotelBookingModel roomBookingModel = HotelBookingModel();
 
   Future bookingHotel({
     required String hotelId,

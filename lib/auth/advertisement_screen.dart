@@ -149,7 +149,7 @@ class _AdvertisementScreenState extends State<AdvertisementScreen> {
     }
 
     return SizedBox(
-      height: 240,
+      height: 260,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -184,7 +184,7 @@ class _AdvertisementScreenState extends State<AdvertisementScreen> {
                       trip.images?.isNotEmpty == true
                           ? trip.images!.first
                           : 'https://via.placeholder.com/400x200',
-                      height: 110,
+                      height: 120,
                       width: double.infinity,
                       fit: BoxFit.cover,
                     ),

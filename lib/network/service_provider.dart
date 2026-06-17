@@ -11,11 +11,15 @@ import 'package:elior/response_model/fav_model/get_fav_model.dart';
 import 'package:elior/response_model/final_payment_model/final_payment_model.dart';
 import 'package:elior/response_model/final_payment_model/payment_initiated_model.dart';
 import 'package:elior/response_model/forgot_model_response.dart';
+import 'package:elior/response_model/home_stay_respnse/homestay_suggestion_response.dart';
 import 'package:elior/response_model/login_model.dart';
+import 'package:elior/response_model/nearby_properties_response.dart';
+import 'package:elior/response_model/property/property_search_response.dart';
 import 'package:elior/response_model/reset_password_response.dart';
 import 'package:elior/response_model/search_hotel_response.dart';
 import 'package:elior/response_model/top_hotel_model.dart';
 import 'package:elior/response_model/transport_response/proceed_model.dart';
+import 'package:elior/response_model/unified_detail_model.dart';
 import 'package:elior/response_model/verify_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -34,7 +38,7 @@ import '../response_model/hotel_booking_response.dart';
 import '../response_model/hotel_detail_response.dart';
 import '../response_model/hotel_suggestion_model.dart';
 import '../response_model/notification_model.dart';
-import '../response_model/paysuccess_model_response.dart' show PaySuccessModel;
+import '../response_model/paysuccess_model_response.dart';
 import '../response_model/register_model.dart';
 import '../response_model/review_model.dart';
 import '../response_model/room_available_response.dart';
@@ -46,13 +50,53 @@ import '../response_model/transport_response/pickup_model.dart';
 import '../response_model/trip_model/travel_vlogs.dart';
 import '../response_model/trip_model/tripModel.dart';
 import '../utils/storage.dart';
-import '../utils/translator_service.dart';
 import 'api_constants.dart';
 import 'api_services.dart';
 import 'error_model.dart';
 
 class ServiceProvider {
-  final TranslationService _translationService = TranslationService();
+
+  // ─── Core helpers ──────────────────────────────────────────────────────────
+
+  /// GET → parse.  Pass [showLoad] = false to skip the loader (e.g. silent bg calls).
+  Future<T> _get<T>(
+      String url,
+      T Function(Map<String, dynamic>) fromJson,
+      T fallback, {
+        bool showLoad = true,
+      }) async {
+    if (showLoad) showLoader();
+    final res = await ApiService().get(url);
+    if (showLoad) hideLoader();
+    if (_ok(res)) return fromJson(res.body);
+    _logError(url, res.body);
+    return fallback;
+  }
+
+  /// POST → parse.
+  Future<T> _post<T>(
+      String url,
+      Map<String, dynamic> body,
+      T Function(Map<String, dynamic>) fromJson,
+      T fallback, {
+        bool showLoad = true,
+      }) async {
+    if (showLoad) showLoader();
+    final res = await ApiService().post(url, body);
+    print(res);
+    if (showLoad) hideLoader();
+    if (_ok(res)) return fromJson(res.body);
+    _logError(url, res.body);
+    return fallback;
+  }
+
+  bool _ok(Response res) =>
+      (res.statusCode == 200 || res.statusCode == 201) && res.body != null;
+
+  void _logError(String url, dynamic body) =>
+      log("❌ [$url] → $body");
+
+  // ─── Auth ──────────────────────────────────────────────────────────────────
 
   Future<RegisterModel> register({
     required String name,
@@ -60,213 +104,60 @@ class ServiceProvider {
     required String email,
     required String password,
     required String mobileCode,
-  }) async {
-    showLoader();
+  }) =>
+      _post(
+        ApiConstants.register,
+        {"name": name, "mobile": phone, "email": email, "password": password, "mobile_code": mobileCode},
+        RegisterModel.fromJson,
+        RegisterModel(),
+      );
 
-    final response = await ApiService().post(ApiConstants.register, {
-      "name": name,
-      "mobile": phone,
-      "email": email,
-      "password": password,
-      "mobile_code": mobileCode,
-    });
+  Future<LoginModel> login({required String email, required String password}) =>
+      _post(ApiConstants.login, {"email": email, "password": password}, LoginModel.fromJson, LoginModel());
 
-    hideLoader();
-    final result = checkResponse(response);
+  Future<VerifyModel> verifyOtp({required String email, required String otp}) =>
+      _post(ApiConstants.verifyOtp, {"email": email, "otp": otp}, VerifyModel.fromJson, VerifyModel());
 
-    if (result != null && result.body != null) {
-      return RegisterModel.fromJson(result.body);
-    } else {
-      print("❌Register failed: ${response.body}");
-      return RegisterModel();
-    }
-  }
-
-  Future<LoginModel> login({
-    required String email,
-    required String password,
-  }) async {
-    showLoader();
-
-    final response = await ApiService().post(ApiConstants.login, {
-      "email": email,
-      "password": password,
-    });
-
-    hideLoader();
-    final result = checkResponse(response);
-
-    if (result != null && result.body != null) {
-      return LoginModel.fromJson(result.body);
-    } else {
-      log("❌ Login failed: ${response.body}");
-      return LoginModel();
-    }
-  }
-
-  Future<ForgotModel> forgotApi({required String email}) async {
-    showLoader();
-
-    final response = await ApiService().post(ApiConstants.verifyEmail, {
-      "email": email,
-    });
-
-    hideLoader();
-    final result = checkResponse(response);
-
-    if (result != null && result.body != null) {
-      return ForgotModel.fromJson(result.body);
-    } else {
-      log("❌ Login failed: ${response.body}");
-      return ForgotModel();
-    }
-  }
+  Future<ForgotModel> forgotApi({required String email}) =>
+      _post(ApiConstants.verifyEmail, {"email": email}, ForgotModel.fromJson, ForgotModel());
 
   Future<ResetModel> resetPassword({
     required String newPassword,
     required String confirmPassword,
     required int id,
-  }) async {
-    showLoader();
+  }) =>
+      _post(
+        ApiConstants.resetPassword,
+        {"new_password": newPassword, "confirm_password": confirmPassword, "id": id},
+        ResetModel.fromJson,
+        ResetModel(),
+      );
 
-    final response = await ApiService().post(ApiConstants.resetPassword, {
-      "new_password": newPassword,
-      "confirm_password": confirmPassword,
-      "id": id,
-    });
+  // ─── Hotels ────────────────────────────────────────────────────────────────
 
-    hideLoader();
-    final result = checkResponse(response);
+  Future<TopHotelModel> topHotelApi() =>
+      _get(ApiConstants.topHotel, TopHotelModel.fromJson, TopHotelModel());
 
-    if (result != null && result.body != null) {
-      return ResetModel.fromJson(result.body);
-    } else {
-      log("❌ Login failed: ${response.body}");
-      return ResetModel();
-    }
-  }
-
-  Future<VerifyModel> verifyOtp({
-    required String email,
-    required String otp,
-  }) async {
-    showLoader();
-
-    final response = await ApiService().post(ApiConstants.verifyOtp, {
-      "email": email,
-      "otp": otp,
-    });
-
-    hideLoader();
-
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return VerifyModel.fromJson(response.body);
-    } else {
-      print("❌ Otp failed: ${response.body}");
-      return VerifyModel();
-    }
-  }
-
-  Future<TopHotelModel> topHotelApi() async {
-    showLoader();
-
-    final response = await ApiService().get(
-      ApiConstants.topHotel,
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return TopHotelModel.fromJson(response.body);
-    } else {
-      return TopHotelModel();
-    }
-  }
-
-  Future<SearchHotelModel> searchHotelApi({
+  Future<PropertySearchResponse> searchHotelApi({
     required String search,
     required String startDate,
     required String endDate,
-    // required int person,
-    // required int rooms,
-  }) async {
-    showLoader();
+  }) =>
+      _post(
+        ApiConstants.searchHotel,
+        {"search": search, "start_date": startDate, "end_date": endDate},
+        PropertySearchResponse.fromJson,
+        PropertySearchResponse(),
+      );
 
-    final response = await ApiService().post(ApiConstants.searchHotel, {
-      "search": search,
-      "start_date": startDate,
-      "end_date": endDate,
-      // "person": person,
-      // "rooms": rooms,
-    });
+  Future<HotelDetailModel> detailHotelApi(int id) =>
+      _get("${ApiConstants.baseUrl}/search-hotels-by-id?hotel_id=$id", HotelDetailModel.fromJson, HotelDetailModel(), showLoad: false);
 
-    hideLoader();
+  Future<FilterModel> filterHotelApi() =>
+      _get("${ApiConstants.baseUrl}/get_hotel_filters_data", FilterModel.fromJson, FilterModel());
 
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return SearchHotelModel.fromJson(response.body);
-    } else {
-      print("❌ Otp failed: ${response.body}");
-      return SearchHotelModel();
-    }
-  }
-
-  Future<HotelDetailModel> detailHotelApi(int id) async {
-    // showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/search-hotels-by-id?hotel_id=$id",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    // hideLoader();
-    if (checkResponse(response) != null) {
-      return HotelDetailModel.fromJson(response.body);
-    } else {
-      return HotelDetailModel();
-    }
-  }
-
-  Future<FilterModel> filterHotelApi() async {
-    showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/get_hotel_filters_data",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return FilterModel.fromJson(response.body);
-    } else {
-      return FilterModel();
-    }
-  }
-
-  Future<FilterModel> filterHomeStayApi() async {
-    showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/get_homestay_filters_data",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return FilterModel.fromJson(response.body);
-    } else {
-      return FilterModel();
-    }
-  }
+  Future<FilterModel> filterHomeStayApi() =>
+      _get("${ApiConstants.baseUrl}/get_homestay_filters_data", FilterModel.fromJson, FilterModel());
 
   Future<SearchFilterModel> searchFilterApi({
     required String search,
@@ -276,742 +167,178 @@ class ServiceProvider {
     List<String>? amenities,
     List<String>? rules,
     String? pricing,
-  }) async {
-    showLoader();
-
-    final Map<String, dynamic> body = {
-      "search": search,
-      "start_date": startDate,
-      "end_date": endDate,
-    };
-
-    if (starRatings != null && starRatings.isNotEmpty) {
-      body["star_ratings"] = starRatings;
-    }
-    if (amenities != null && amenities.isNotEmpty) {
-      body["amenities"] = amenities;
-    }
-    if (rules != null && rules.isNotEmpty) {
-      body["rules"] = rules;
-    }
-    if (pricing != null && pricing.isNotEmpty) {
-      body["pricing"] = pricing;
-    }
-
-    final response = await ApiService().post(
-      ApiConstants.searchHotelFilter,
-      body,
-    );
-
-    hideLoader();
-
-    if ((response.statusCode == 200 || response.statusCode == 201) &&
-        response.body != null) {
-      return SearchFilterModel.fromJson(response.body);
-    } else {
-      print("❌ Search Filter failed: ${response.body}");
-      return SearchFilterModel();
-    }
-  }
+  }) =>
+      _post(
+        ApiConstants.searchHotelFilter,
+        {
+          "search": search,
+          "start_date": startDate,
+          "end_date": endDate,
+          if (starRatings != null && starRatings.isNotEmpty) "star_ratings": starRatings,
+          if (amenities != null && amenities.isNotEmpty) "amenities": amenities,
+          if (rules != null && rules.isNotEmpty) "rules": rules,
+          if (pricing != null && pricing.isNotEmpty) "pricing": pricing,
+        },
+        SearchFilterModel.fromJson,
+        SearchFilterModel(),
+      );
 
   Future<SearchSotingModel> searchSortingApi({
     required String search,
     required String startDate,
     required String endDate,
     required String sort,
-  }) async {
-    showLoader();
+  }) =>
+      _post(
+        ApiConstants.searchHotelSorting,
+        {"search": search, "start_date": startDate, "end_date": endDate, "sort_by": sort},
+        SearchSotingModel.fromJson,
+        SearchSotingModel(),
+      );
 
-    final Map<String, dynamic> body = {
-      "search": search,
-      "start_date": startDate,
-      "end_date": endDate,
-      "sort_by": sort,
-    };
+  Future<RoomAvailableModel> roomAvailableApi(int id, String checkIn, String checkOut) =>
+      _get(
+        "${ApiConstants.baseUrl}/get-hotelrooms-by-id?hotel_id=$id&checkin_date=$checkIn&checkout_date=$checkOut",
+        RoomAvailableModel.fromJson,
+        RoomAvailableModel(),
+      );
 
-    final response = await ApiService().post(
-      ApiConstants.searchHotelSorting,
-      body,
-    );
-
-    hideLoader();
-
-    if ((response.statusCode == 200 || response.statusCode == 201) &&
-        response.body != null) {
-      return SearchSotingModel.fromJson(response.body);
-    } else {
-      print("❌ Search Filter failed: ${response.body}");
-      return SearchSotingModel();
-    }
-  }
-
-  Future<SearchFilterModel> searchFilterHomeApi({
-    required String search,
-    required String startDate,
-    required String endDate,
-    // List<int>? starRatings,
-    List<String>? amenities,
-    List<String>? rules,
-    String? pricing,
-  }) async {
-    showLoader();
-
-    final Map<String, dynamic> body = {
-      "search": search,
-      "start_date": startDate,
-      "end_date": endDate,
-    };
-
-    // if (starRatings != null && starRatings.isNotEmpty) {
-    //   body["star_ratings"] = starRatings;
-    // }
-    if (amenities != null && amenities.isNotEmpty) {
-      body["amenities"] = amenities;
-    }
-    if (rules != null && rules.isNotEmpty) {
-      body["rules"] = rules;
-    }
-    if (pricing != null && pricing.isNotEmpty) {
-      body["pricing"] = pricing;
-    }
-
-    final response = await ApiService().post(
-      ApiConstants.searchHomeStayFilter,
-      body,
-    );
-
-    hideLoader();
-
-    if ((response.statusCode == 200 || response.statusCode == 201) &&
-        response.body != null) {
-      return SearchFilterModel.fromJson(response.body);
-    } else {
-      print("❌ Search Filter failed: ${response.body}");
-      return SearchFilterModel();
-    }
-  }
-
-  Future<SearchSotingModel> searchSortingHomeApi({
-    required String search,
-    required String startDate,
-    required String endDate,
-    required String sort,
-  }) async {
-    showLoader();
-
-    final Map<String, dynamic> body = {
-      "search": search,
-      "start_date": startDate,
-      "end_date": endDate,
-      "sort_by": sort,
-    };
-
-    final response = await ApiService().post(
-      ApiConstants.searchHomeStaySorting,
-      body,
-    );
-
-    hideLoader();
-
-    if ((response.statusCode == 200 || response.statusCode == 201) &&
-        response.body != null) {
-      return SearchSotingModel.fromJson(response.body);
-    } else {
-      print("❌ Search Filter failed: ${response.body}");
-      return SearchSotingModel();
-    }
-  }
-
-  Future<RoomAvailableModel> roomAvailableApi(
-    int id,
-    String checkIn,
-    String checkOut,
-  ) async {
-    showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/get-hotelrooms-by-id?hotel_id=$id&checkin_date=$checkIn&checkout_date=$checkOut",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return RoomAvailableModel.fromJson(response.body);
-    } else {
-      return RoomAvailableModel();
-    }
-  }
-
-  Future<RoomBookingModel> hotelBookingApi({
+  Future<HotelBookingModel> hotelBookingApi({
     required String hotelId,
     required String startDate,
     required String endDate,
     required String type,
     required int person,
     required int rooms,
-  }) async {
-    showLoader();
-
-    final response = await ApiService().post(ApiConstants.hotelRoomsBooking, {
-      "hotel_id": hotelId,
-      "checkin_date": startDate,
-      "checkout_date": endDate,
-      "room_type": type,
-      "room": rooms,
-      "person": person,
-    });
-
-    hideLoader();
-
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return RoomBookingModel.fromJson(response.body);
-    } else {
-      print("❌ failed: ${response.body}");
-      return RoomBookingModel();
-    }
-  }
+  }) =>
+      _post(
+        ApiConstants.hotelRoomsBooking,
+        {"hotel_id": hotelId, "checkin_date": startDate, "checkout_date": endDate, "room_type": type, "room": rooms, "person": person},
+        HotelBookingModel.fromJson,
+        HotelBookingModel(),
+      );
 
   Future<BookingPaymentModel> bookingPaymentDetailApi(
-    int id,
-    String checkIn,
-    String checkOut,
-    String type,
-    String roomAllot,
-    String guest,
-  ) async {
-    showLoader();
+      int id, String checkIn, String checkOut, String type, String roomAllot, String guest,
+      ) =>
+      _get(
+        "${ApiConstants.baseUrl}/pay-at-hotel-by-id?hotel_id=$id&room_type=$type Room&alloted_id=$roomAllot&checkin_date=$checkIn&checkout_date=$checkOut&guest=$guest",
+        BookingPaymentModel.fromJson,
+        BookingPaymentModel(),
+      );
 
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/pay-at-hotel-by-id?hotel_id=$id&room_type=$type Room&alloted_id=$roomAllot&checkin_date=$checkIn&checkout_date=$checkOut&guest=$guest",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return BookingPaymentModel.fromJson(response.body);
-    } else {
-      return BookingPaymentModel(); // fallback
-    }
-  }
+  Future<BookingHistoryModel> bookingHostoryApi() =>
+      _get(ApiConstants.bookingHistory, BookingHistoryModel.fromJson, BookingHistoryModel());
 
-  Future<BookingHistoryModel> bookingHostoryApi() async {
-    showLoader();
+  Future<NearbyPropertiesResponse> getNearbyProperties() => _get(ApiConstants.getNearbyProperties, NearbyPropertiesResponse.fromJson, NearbyPropertiesResponse());
 
-    final response = await ApiService().get(
-      ApiConstants.bookingHistory,
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return BookingHistoryModel.fromJson(response.body);
-    } else {
-      return BookingHistoryModel(); // fallback
-    }
-  }
+  Future<BookingHistoryDetails> bookingHistoryDetail(int id) =>
+      _get("${ApiConstants.baseUrl}/get-booking-history-by-id?booking_id=$id", BookingHistoryDetails.fromJson, BookingHistoryDetails(), showLoad: false);
 
-  Future<BusHistoryModel> busHostoryApi() async {
-    showLoader();
+  Future<FInalPaymentModel> payFinalHotelPaymentApi({
+    required String propertyId,
+    required String checkInDate,
+    required String checkOutDate,
+    required String guests,
+    required String roomtype,
+    required String roomIdAllotted,
+    required int basePrice,
+    required int taxFee,
+    required int discountAmount,
+    required int totalAmount,
+    required String payPlan,
+  }) =>
+      _post(
+        ApiConstants.finalHotelApi,
+        {
+          "propertyId": propertyId, "check_in_date": checkInDate, "check_out_date": checkOutDate,
+          "guests": guests, "room_type": roomtype, "roomId_allotted": roomIdAllotted,
+          "base_price": basePrice, "taxFee": taxFee, "discount_amount": discountAmount,
+          "totalAmount": totalAmount, "payPlan": payPlan,
+        },
+        FInalPaymentModel.fromJson,
+        FInalPaymentModel(),
+      );
 
-    final response = await ApiService().get(
-      ApiConstants.busHistory,
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return BusHistoryModel.fromJson(response.body);
-    } else {
-      return BusHistoryModel(); // fallback
-    }
-  }
+  // ─── Home Stay ─────────────────────────────────────────────────────────────
 
-  Future<TripModel> tripApi() async {
-    showLoader();
-
-    final response = await ApiService().get(
-      ApiConstants.tripApi,
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return TripModel.fromJson(response.body);
-    } else {
-      return TripModel(); // fallback
-    }
-  }
-
-  Future<TripModel> tripApiUnauth() async {
-    // showLoader();
-
-    final response = await ApiService().get(
-      ApiConstants.tripApiUnauthenticated,
-      headers: {
-        // "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    // hideLoader();
-    if (checkResponse(response) != null) {
-      return TripModel.fromJson(response.body);
-    } else {
-      return TripModel(); // fallback
-    }
-  }
-
-  Future<TripModel> favApi() async {
-    showLoader();
-
-    final response = await ApiService().get(
-      ApiConstants.favApi,
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return TripModel.fromJson(response.body);
-    } else {
-      return TripModel(); // fallback
-    }
-  }
-
-  Future<TripModel> ViewtripApi() async {
-    showLoader();
-
-    final response = await ApiService().get(
-      ApiConstants.ViewAlltripApi,
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return TripModel.fromJson(response.body);
-    } else {
-      return TripModel(); // fallback
-    }
-  }
-
-  /// HOME STAY API
-  Future<SearchHotelModel> searchHomeStayApi({
+  Future<PropertySearchResponse> searchHomeStayApi({
     required String search,
     required String startDate,
     required String endDate,
-    // required int person,
-    // required int rooms,
-  }) async {
-    showLoader();
+  }) =>
+      _post(
+        ApiConstants.searchHomeStay,
+        {"search": search, "start_date": startDate, "end_date": endDate},
+        PropertySearchResponse.fromJson,
+        PropertySearchResponse(),
+      );
 
-    final response = await ApiService().post(ApiConstants.searchHomeStay, {
-      "search": search,
-      "start_date": startDate,
-      "end_date": endDate,
-      // "person": person,
-      // "rooms": rooms,
-    });
+  Future<SearchFilterModel> searchFilterHomeApi({
+    required String search,
+    required String startDate,
+    required String endDate,
+    List<String>? amenities,
+    List<String>? rules,
+    String? pricing,
+  }) =>
+      _post(
+        ApiConstants.searchHomeStayFilter,
+        {
+          "search": search,
+          "start_date": startDate,
+          "end_date": endDate,
+          if (amenities != null && amenities.isNotEmpty) "amenities": amenities,
+          if (rules != null && rules.isNotEmpty) "rules": rules,
+          if (pricing != null && pricing.isNotEmpty) "pricing": pricing,
+        },
+        SearchFilterModel.fromJson,
+        SearchFilterModel(),
+      );
 
-    hideLoader();
+  Future<SearchSotingModel> searchSortingHomeApi({
+    required String search,
+    required String startDate,
+    required String endDate,
+    required String sort,
+  }) =>
+      _post(
+        ApiConstants.searchHomeStaySorting,
+        {"search": search, "start_date": startDate, "end_date": endDate, "sort_by": sort},
+        SearchSotingModel.fromJson,
+        SearchSotingModel(),
+      );
 
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return SearchHotelModel.fromJson(response.body);
-    } else {
-      print("❌ Otp failed: ${response.body}");
-      return SearchHotelModel();
-    }
-  }
+  Future<UnifiedDetailModel> detailHomeStayApi(int id) =>
+      _get("${ApiConstants.baseUrl}/search-homestay-by-id?homestay_id=$id", UnifiedDetailModel.fromJson, UnifiedDetailModel());
 
-  Future<HomeStayDetailModel> detailHomeStayApi(int id) async {
-    showLoader();
+  Future<AccomendationModel> homeStayRoomAvailableApi(int id, String checkIn, String checkOut) =>
+      _get(
+        "${ApiConstants.baseUrl}/get-homestay-accomodation-by-id?homestay_id=$id&checkin_date=$checkIn&checkout_date=$checkOut",
+        AccomendationModel.fromJson,
+        AccomendationModel(),
+      );
 
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/search-homestay-by-id?homestay_id=$id",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return HomeStayDetailModel.fromJson(response.body);
-    } else {
-      return HomeStayDetailModel();
-    }
-  }
-
-  Future<AccomendationModel> homeStayRoomAvailableApi(
-    int id,
-    String checkIn,
-    String checkOut,
-  ) async {
-    showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/get-homestay-accomodation-by-id?homestay_id=$id&checkin_date=$checkIn&checkout_date=$checkOut",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return AccomendationModel.fromJson(response.body);
-    } else {
-      return AccomendationModel();
-    }
-  }
-
-  Future<AccomendationBookingModel> AccomendationId({
+  Future<AccommodationBookingModel> AccomendationId({
     required String homeStayId,
     required String checkInDate,
     required String checkOutDate,
     required String accomodation,
     required int person,
-    // required int rooms,
-  }) async {
-    showLoader();
+  }) =>
+      _post(
+        ApiConstants.accomendationId,
+        {"homestay_id": homeStayId, "checkin_date": checkInDate, "checkout_date": checkOutDate, "accomodation": accomodation, "person": person},
+        AccommodationBookingModel.fromJson,
+        AccommodationBookingModel(),
+      );
 
-    final response = await ApiService().post(ApiConstants.accomendationId, {
-      "homestay_id": homeStayId,
-      "checkin_date": checkInDate,
-      "checkout_date": checkOutDate,
-      "accomodation": accomodation,
-      "person": person,
-    });
-
-    hideLoader();
-
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return AccomendationBookingModel.fromJson(response.body);
-    } else {
-      print("❌ Otp failed: ${response.body}");
-      return AccomendationBookingModel();
-    }
-  }
-
-  Future<HomePaymentModel> homeStayPayApi(
-    int id,
-    String checkIn,
-    String checkOut,
-  ) async {
-    showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/pay-at-homestay-by-id?homestay_id=$id&checkin_date=$checkIn-08&checkout_date=$checkOut",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return HomePaymentModel.fromJson(response.body);
-    } else {
-      return HomePaymentModel();
-    }
-  }
-  Future<List<HotelSuggestion>> fetchHotelSuggestions(String query) async {
-    if (query.isEmpty) return [];
-
-    final response = await http.get(
-      Uri.parse(
-          "https://eliorbooking.com/api/search/hotel-suggestions?q=$query"),
-    );
-
-    if (response.statusCode == 200) {
-      List data = jsonDecode(response.body);
-      return data
-          .map((e) => HotelSuggestion.fromJson(e))
-          .toList();
-    } else {
-      throw Exception("Failed to load suggestions");
-    }
-  }
-  // Future<RoomBookingModel> homeStayBookingApi({
-  //   required String homeStayId,
-  //   required String startDate,
-  //   required String endDate,
-  //   required String type,
-  //   required int person,
-  //   required int rooms,
-  // }) async {
-  //   showLoader();
-  //
-  //   final response = await ApiService().post(ApiConstants.bookHomeStayRoom, {
-  //     "homestay_id": homeStayId,
-  //     "checkin_date": startDate,
-  //     "checkout_date": endDate,
-  //     "room_type": type,
-  //     "room": rooms,
-  //     "person": person,
-  //   });
-  //
-  //   hideLoader();
-  //
-  //   if (response.statusCode == 200 ||
-  //       response.statusCode == 201 && response.body != null) {
-  //     return RoomBookingModel.fromJson(response.body);
-  //   } else {
-  //     print("❌ failed: ${response.body}");
-  //     return RoomBookingModel();
-  //   }
-  // }
-
-  Future<BusRouteModel> busRouteApi({
-    required String origin,
-    required String destination,
-    required String journeyDate,
-    // required int person,
-    // required int rooms,
-  }) async {
-    showLoader();
-
-    final response = await ApiService().post(ApiConstants.searchBusRoute, {
-      "origin": origin,
-      "destination": destination,
-      "journey_date": journeyDate,
-      // "person": person,
-      // "rooms": rooms,
-    });
-
-    hideLoader();
-
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return BusRouteModel.fromJson(response.body);
-    } else {
-      print("❌ Otp failed: ${response.body}");
-      return BusRouteModel();
-    }
-  }
-
-  Future<HotelDetailModel> tripDetailHotelApi(int id) async {
-    showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/get-property-details?property_id=$id",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return HotelDetailModel.fromJson(response.body);
-    } else {
-      return HotelDetailModel();
-    }
-  }
-
-  Future<TravelVlogsModel> TraveltripApi() async {
-    showLoader();
-
-    final response = await ApiService().get(
-      ApiConstants.traveltripApi,
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return TravelVlogsModel.fromJson(response.body);
-    } else {
-      return TravelVlogsModel(); // fallback
-    }
-  }
-
-  Future<TravelVlogsModel> travelTripApiUN() async {
-    // showLoader();
-
-    final response = await ApiService().get(
-      ApiConstants.travelTripApiUnAuth,
-      headers: {
-        // "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    // hideLoader();
-    if (checkResponse(response) != null) {
-      return TravelVlogsModel.fromJson(response.body);
-    } else {
-      return TravelVlogsModel(); // fallback
-    }
-  }
-
-  Future<TravelVlogsModel> TravelViewtripApi() async {
-    showLoader();
-
-    final response = await ApiService().get(
-      ApiConstants.travelViewAllTripApi,
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return TravelVlogsModel.fromJson(response.body);
-    } else {
-      return TravelVlogsModel(); // fallback
-    }
-  }
-
-  Future<BusSeatModel> busSeatApi({
-    required int busId,
-    required int busRouteId,
-  }) async {
-    showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/bus-seat-selection?bus_id=$busId&bus_route_id=$busRouteId",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return BusSeatModel.fromJson(response.body);
-    } else {
-      return BusSeatModel(); // fallback
-    }
-  }
-
-  Future<BusSeatBottomModel> busSeatBottomDetailApi({
-    required int busId,
-    required int busRouteId,
-  }) async {
-    showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/bus-seat-selection-details?bus_id=$busId&bus_route_id=$busRouteId",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return BusSeatBottomModel.fromJson(response.body);
-    } else {
-      return BusSeatBottomModel(); // fallback
-    }
-  }
-
-  Future<BusPikUpModel> busSeatPickupApi({
-    required int busId,
-    required int busRouteId,
-  }) async {
-    showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/bus-selection-pickup-points?bus_id=$busId&bus_route_id=$busRouteId",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return BusPikUpModel.fromJson(response.body);
-    } else {
-      return BusPikUpModel(); // fallback
-    }
-  }
-
-  Future<ProceedModel> proceedApi({
-    required String seats,
-    required int busId,
-    required int busRouteId,
-    required int BoardingPointId,
-    required int droppingPointId,
-    required int SeatPrice,
-  }) async {
-    showLoader();
-
-    final response = await ApiService().post(ApiConstants.proceedApi, {
-      "bus_id": busId,
-      "bus_route_id": busRouteId,
-      "boarding_point_id": BoardingPointId,
-      "dropping_point_id": droppingPointId,
-      "seats": seats,
-      "seats_price": SeatPrice,
-      // "person": person,
-      // "rooms": rooms,
-    });
-
-    hideLoader();
-
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return ProceedModel.fromJson(response.body);
-    } else {
-      print("❌ proceed failed: ${response.body}");
-      return ProceedModel();
-    }
-  }
-
-  Future<Map<String, dynamic>> proceedPayNowSeatBooking({
-    required int busId,
-    required int busRouteId,
-    required int boardingPointId,
-    required int droppingPointId,
-    required List<String> seats,
-    required int seatsPrice,
-    required List<Map<String, dynamic>> passengerData,
-  }) async {
-    final url = Uri.parse(
-      'https://eliorbooking.com/api/proceed-pay-now-seat-booking',
-    );
-
-    final body = {
-      "bus_id": busId,
-      "bus_route_id": busRouteId,
-      "boarding_point_id": boardingPointId,
-      "dropping_point_id": droppingPointId,
-      "seats": seats.join(','),
-      "seats_price": seatsPrice,
-      "passenger_data": passengerData,
-    };
-
-    log("📤 ProceedPayNow Request: ${jsonEncode(body)}");
-
-    final response = await http.post(
-      url,
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-        "Content-Type": "application/json", // ✅ Important!
-      },
-      body: jsonEncode(body),
-    );
-
-    log("📥 ProceedPayNow Response: ${response.body}");
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception("❌ Failed [${response.statusCode}]: ${response.body}");
-    }
-  }
+  Future<HomePaymentModel> homeStayPayApi(int id, String checkIn, String checkOut) =>
+      _get(
+        "${ApiConstants.baseUrl}/pay-at-homestay-by-id?homestay_id=$id&checkin_date=$checkIn-08&checkout_date=$checkOut",
+        HomePaymentModel.fromJson,
+        HomePaymentModel(),
+      );
 
   Future<FInalPaymentModel> payFinalPaymentApi({
     required String propertyId,
@@ -1025,298 +352,192 @@ class ServiceProvider {
     required int discountAmount,
     required int totalAmount,
     required String payPlan,
+  }) =>
+      _post(
+        ApiConstants.finalPaymentApi,
+        {
+          "propertyId": propertyId, "check_in_date": checkInDate, "check_out_date": checkOutDate,
+          "guests": guests, "room_type": roomtype, "roomId_allotted": roomIdAllotted,
+          "base_price": basePrice, "taxFee": taxFee, "discount_amount": discountAmount,
+          "totalAmount": totalAmount, "payPlan": payPlan,
+        },
+        FInalPaymentModel.fromJson,
+        FInalPaymentModel(),
+      );
+
+  Future<HomestaySuggestionResponse> fetchHomestaysSuggestions(String query) =>
+      _get(ApiConstants.homestaySuggestions(query), HomestaySuggestionResponse.fromJson, HomestaySuggestionResponse(), showLoad: false);
+
+  // ─── Transport / Bus ───────────────────────────────────────────────────────
+
+  Future<BusRouteModel> busRouteApi({
+    required String origin,
+    required String destination,
+    required String journeyDate,
+  }) =>
+      _post(
+        ApiConstants.searchBusRoute,
+        {"origin": origin, "destination": destination, "journey_date": journeyDate},
+        BusRouteModel.fromJson,
+        BusRouteModel(),
+      );
+
+  Future<BusSeatModel> busSeatApi({required int busId, required int busRouteId}) =>
+      _get("${ApiConstants.baseUrl}/bus-seat-selection?bus_id=$busId&bus_route_id=$busRouteId", BusSeatModel.fromJson, BusSeatModel());
+
+  Future<BusSeatBottomModel> busSeatBottomDetailApi({required int busId, required int busRouteId}) =>
+      _get("${ApiConstants.baseUrl}/bus-seat-selection-details?bus_id=$busId&bus_route_id=$busRouteId", BusSeatBottomModel.fromJson, BusSeatBottomModel());
+
+  Future<BusPikUpModel> busSeatPickupApi({required int busId, required int busRouteId}) =>
+      _get("${ApiConstants.baseUrl}/bus-selection-pickup-points?bus_id=$busId&bus_route_id=$busRouteId", BusPikUpModel.fromJson, BusPikUpModel());
+
+  Future<ProceedModel> proceedApi({
+    required String seats,
+    required int busId,
+    required int busRouteId,
+    required int BoardingPointId,
+    required int droppingPointId,
+    required int SeatPrice,
+  }) =>
+      _post(
+        ApiConstants.proceedApi,
+        {
+          "bus_id": busId, "bus_route_id": busRouteId,
+          "boarding_point_id": BoardingPointId, "dropping_point_id": droppingPointId,
+          "seats": seats, "seats_price": SeatPrice,
+        },
+        ProceedModel.fromJson,
+        ProceedModel(),
+      );
+
+  /// Uses raw http because it sends a JSON list in the body (GetConnect encodes maps only).
+  Future<Map<String, dynamic>> proceedPayNowSeatBooking({
+    required int busId,
+    required int busRouteId,
+    required int boardingPointId,
+    required int droppingPointId,
+    required List<String> seats,
+    required int seatsPrice,
+    required List<Map<String, dynamic>> passengerData,
   }) async {
-    showLoader();
-    final response = await ApiService().post(ApiConstants.finalPaymentApi, {
-      "propertyId": propertyId,
-      "check_in_date": checkInDate,
-      "check_out_date": checkOutDate,
-      "guests": guests,
-      "room_type": roomtype,
-      "roomId_allotted": roomIdAllotted,
-      "base_price": basePrice,
-      "taxFee": taxFee,
-      "discount_amount": discountAmount,
-      "totalAmount": totalAmount,
-      "payPlan": payPlan,
-    });
-
-    hideLoader();
-
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return FInalPaymentModel.fromJson(response.body);
-    } else {
-      print("❌PaymentFailed: ${response.body}");
-      return FInalPaymentModel();
-    }
-  }
-Future<FInalPaymentModel> payFinalHotelPaymentApi({
-    required String propertyId,
-    required String checkInDate,
-    required String checkOutDate,
-    required String guests,
-    required String roomtype,
-    required String roomIdAllotted,
-    required int basePrice,
-    required int taxFee,
-    required int discountAmount,
-    required int totalAmount,
-    required String payPlan,
-  }) async {
-    showLoader();
-    final response = await ApiService().post(ApiConstants.finalHotelApi, {
-      "propertyId": propertyId,
-      "check_in_date": checkInDate,
-      "check_out_date": checkOutDate,
-      "guests": guests,
-      "room_type": roomtype,
-      "roomId_allotted": roomIdAllotted,
-      "base_price": basePrice,
-      "taxFee": taxFee,
-      "discount_amount": discountAmount,
-      "totalAmount": totalAmount,
-      "payPlan": payPlan,
-    });
-
-    hideLoader();
-
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return FInalPaymentModel.fromJson(response.body);
-    } else {
-      print("❌PaymentFailed: ${response.body}");
-      return FInalPaymentModel();
-    }
-  }
-
-  Future<PaymentInitiatedModel> paymentInitiated({
-    required int type,
-    required int bookingId,
-  }) async {
-    showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/pay/kkiapay/$type/$bookingId",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
+    final body = {
+      "bus_id": busId, "bus_route_id": busRouteId,
+      "boarding_point_id": boardingPointId, "dropping_point_id": droppingPointId,
+      "seats": seats.join(','), "seats_price": seatsPrice,
+      "passenger_data": passengerData,
+    };
+    final response = await http.post(
+      Uri.parse("${ApiConstants.baseUrl}/proceed-pay-now-seat-booking"),
+      headers: {"Authorization": "Bearer ${LocalStorages().getToken() ?? ""}", "Accept": "application/json", "Content-Type": "application/json"},
+      body: jsonEncode(body),
     );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return PaymentInitiatedModel.fromJson(response.body);
-    } else {
-      return PaymentInitiatedModel(); // fallback
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
     }
+    throw Exception("❌ [proceedPayNowSeatBooking] ${response.statusCode}: ${response.body}");
   }
 
-  Future<PaySuccessModel> paymentSuccess({
-    required String transactionId,
-  }) async {
-    showLoader();
+  Future<BusHistoryModel> busHostoryApi() =>
+      _get(ApiConstants.busHistory, BusHistoryModel.fromJson, BusHistoryModel());
 
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/pay/verifyPaymentKkiapay/$transactionId",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    hideLoader();
-    if (checkResponse(response) != null) {
-      return PaySuccessModel.fromJson(response.body);
-    } else {
-      return PaySuccessModel(); // fallback
-    }
-  }
+  Future<BusIicketHistoryModel> busTicketHistoryDetail(int id) =>
+      _get("${ApiConstants.baseUrl}/get-bus-booking-history-by-id?booking_id=$id", BusIicketHistoryModel.fromJson, BusIicketHistoryModel(), showLoad: false);
 
-  Future<SelectFaModel> selectFavProperty({
-    required int propertyId,
+  // ─── Trips & Travel blogs ──────────────────────────────────────────────────
 
-    // required int rooms,
-  }) async {
-    showLoader();
+  Future<TripModel> tripApi() =>
+      _get(ApiConstants.tripApi, TripModel.fromJson, TripModel());
 
-    final response = await ApiService().post(ApiConstants.selectMyFav, {
-      "property_id": propertyId,
-    });
+  Future<TripModel> tripApiUnauth() =>
+      _get(ApiConstants.tripApiUnauthenticated, TripModel.fromJson, TripModel(), showLoad: false);
 
-    hideLoader();
+  Future<TripModel> ViewtripApi() =>
+      _get(ApiConstants.ViewAlltripApi, TripModel.fromJson, TripModel());
 
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return SelectFaModel.fromJson(response.body);
-    } else {
-      print("❌ Otp failed: ${response.body}");
-      return SelectFaModel();
-    }
-  }
+  Future<HotelDetailModel> tripDetailHotelApi(int id) =>
+      _get("${ApiConstants.baseUrl}/get-property-details?property_id=$id", HotelDetailModel.fromJson, HotelDetailModel());
 
-  Future<SelectFaModel> removeFavProperty({
-    required int propertyId,
+  Future<TravelVlogsModel> TraveltripApi() =>
+      _get(ApiConstants.traveltripApi, TravelVlogsModel.fromJson, TravelVlogsModel());
 
-    // required int rooms,
-  }) async {
-    showLoader();
+  Future<TravelVlogsModel> travelTripApiUN() =>
+      _get(ApiConstants.travelTripApiUnAuth, TravelVlogsModel.fromJson, TravelVlogsModel(), showLoad: false);
 
-    final response = await ApiService().post(ApiConstants.removeFav, {
-      "property_id": propertyId,
-    });
+  Future<TravelVlogsModel> TravelViewtripApi() =>
+      _get(ApiConstants.travelViewAllTripApi, TravelVlogsModel.fromJson, TravelVlogsModel());
 
-    hideLoader();
+  // ─── Favourites ────────────────────────────────────────────────────────────
 
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return SelectFaModel.fromJson(response.body);
-    } else {
-      print("❌ Otp failed: ${response.body}");
-      return SelectFaModel();
-    }
-  }
+  Future<TripModel> favApi() =>
+      _get(ApiConstants.favApi, TripModel.fromJson, TripModel());
 
-  Future<GetFavModel> getFavProperty() async {
-    showLoader();
+  Future<GetFavModel> getFavProperty() =>
+      _get(ApiConstants.getMyFav, GetFavModel.fromJson, GetFavModel());
 
-    final response = await ApiService().get(ApiConstants.getMyFav);
+  Future<SelectFaModel> selectFavProperty({required int propertyId}) =>
+      _post(ApiConstants.selectMyFav, {"property_id": propertyId}, SelectFaModel.fromJson, SelectFaModel());
 
-    hideLoader();
+  Future<SelectFaModel> removeFavProperty({required int propertyId}) =>
+      _post(ApiConstants.removeFav, {"property_id": propertyId}, SelectFaModel.fromJson, SelectFaModel());
 
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return GetFavModel.fromJson(response.body);
-    } else {
-      print("❌ Otp failed: ${response.body}");
-      return GetFavModel();
-    }
-  }
-  Future<NotificationModel> getNotification() async {
-    showLoader();
-
-    final response = await ApiService().get(ApiConstants.getMyNotification);
-
-    hideLoader();
-
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return NotificationModel.fromJson(response.body);
-    } else {
-      print("❌ Otp failed: ${response.body}");
-      return NotificationModel();
-    }
-  }
-
-  Future<BookingHistoryDetails> bookingHistoryDetail(int id) async {
-    // showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/get-booking-history-by-id?booking_id=$id",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    // hideLoader();
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return BookingHistoryDetails.fromJson(response.body);
-    } else {
-      return BookingHistoryDetails();
-    }
-  }
-
-  Future<BusIicketHistoryModel> busTicketHistoryDetail(int id) async {
-    // showLoader();
-
-    final response = await ApiService().get(
-      "https://eliorbooking.com/api/get-bus-booking-history-by-id?booking_id=$id",
-      headers: {
-        "Authorization": "Bearer ${LocalStorages().getToken() ?? ""}",
-        "Accept": "application/json",
-      },
-    );
-    // hideLoader();
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return BusIicketHistoryModel.fromJson(response.body);
-    } else {
-      return BusIicketHistoryModel();
-    }
-  }
+  // ─── Reviews ──────────────────────────────────────────────────────────────
 
   Future<ReviewModel> review({
     required int bookingId,
     required int starRating,
     required String title,
     required String review,
+  }) =>
+      _post(
+        ApiConstants.review,
+        {"booking_id": bookingId, "star_rating": starRating, "title": title, "review": review},
+        ReviewModel.fromJson,
+        ReviewModel(),
+        showLoad: false,
+      );
 
-    // required int rooms,
-  }) async {
-    // showLoader();
-
-    final response = await ApiService().post(ApiConstants.review, {
-      "booking_id": bookingId,
-      "star_rating": starRating,
-      "title": title,
-      "review": review,
-    });
-
-    // hideLoader();
-
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return ReviewModel.fromJson(response.body);
-    } else {
-      print("❌ Otp failed: ${response.body}");
-      return ReviewModel();
-    }
-  }
- Future<ReviewModel> busReview({
+  Future<ReviewModel> busReview({
     required int bookingId,
     required int starRating,
     required String title,
     required String review,
+  }) =>
+      _post(
+        ApiConstants.busReview,
+        {"booking_id": bookingId, "star_rating": starRating, "title": title, "review": review},
+        ReviewModel.fromJson,
+        ReviewModel(),
+        showLoad: false,
+      );
 
-    // required int rooms,
-  }) async {
-    // showLoader();
+  // ─── Payments ──────────────────────────────────────────────────────────────
 
-    final response = await ApiService().post(ApiConstants.busReview, {
-      "booking_id": bookingId,
-      "star_rating": starRating,
-      "title": title,
-      "review": review,
-    });
+  Future<PaymentInitiatedModel> paymentInitiated({required int type, required int bookingId}) =>
+      _get("${ApiConstants.baseUrl}/pay/kkiapay/$type/$bookingId", PaymentInitiatedModel.fromJson, PaymentInitiatedModel());
 
-    // hideLoader();
+  Future<PaySuccessModel> paymentSuccess({required String transactionId}) =>
+      _get("${ApiConstants.baseUrl}/pay/verifyPaymentKkiapay/$transactionId", PaySuccessModel.fromJson, PaySuccessModel());
 
-    if (response.statusCode == 200 ||
-        response.statusCode == 201 && response.body != null) {
-      return ReviewModel.fromJson(response.body);
-    } else {
-      print("❌ Otp failed: ${response.body}");
-      return ReviewModel();
+  // ─── Profile ───────────────────────────────────────────────────────────────
+
+  Future<NotificationModel> getNotification() =>
+      _get(ApiConstants.getMyNotification, NotificationModel.fromJson, NotificationModel());
+
+  // ─── Hotel suggestions (raw http, returns a list not a map) ───────────────
+
+  Future<List<HotelSuggestion>> fetchHotelSuggestions(String query) async {
+    if (query.isEmpty) return [];
+    final response = await http.get(Uri.parse("${ApiConstants.baseUrl}/search/hotel-suggestions?q=$query"));
+    if (response.statusCode == 200) {
+      return (jsonDecode(response.body) as List).map((e) => HotelSuggestion.fromJson(e)).toList();
     }
+    return [];
   }
 
-  snackBarMessage({
-    required String message,
-    required String head,
-    Color? color,
-    bool isError = true,
-  }) {
-    return Get.snackbar(
-      head,
-      message,
-      colorText: Colors.white,
-      duration: const Duration(seconds: 3),
-      borderRadius: 20,
-      margin: const EdgeInsets.all(20),
-      backgroundColor: isError ? Colors.red : Colors.green,
-    );
-  }
+  // ─── UI helpers ────────────────────────────────────────────────────────────
 
   void showLoader() {
+    if (Get.isDialogOpen ?? false) return;
     Get.dialog(
       PopScope(
         canPop: false,
@@ -1329,32 +550,20 @@ Future<FInalPaymentModel> payFinalHotelPaymentApi({
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2)],
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ClipRRect(borderRadius: BorderRadius.circular(12), child: Image(image: AssetImage(AssetsScreen.eliorAppLogo), width: 60, height: 60,)),
-                  const SizedBox(height: 16),
-                  CircularProgressIndicator(
-                    color: AppTheme.appThemeColor,
-                    strokeWidth: 3,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image(image: AssetImage(AssetsScreen.eliorAppLogo), width: 60, height: 60),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    "Loading...",
-                    style: GoogleFonts.poppins(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  CircularProgressIndicator(color: AppTheme.appThemeColor, strokeWidth: 3),
+                  const SizedBox(height: 16),
+                  Text("Loading...", style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
@@ -1366,46 +575,35 @@ Future<FInalPaymentModel> payFinalHotelPaymentApi({
     );
   }
 
-  hideLoader() {
-    Navigator.of(Get.context!, rootNavigator: true).pop('dialog');
+  void hideLoader() {
+    if (Get.isDialogOpen ?? false) {
+      Navigator.of(Get.context!, rootNavigator: true).pop();
+    }
   }
 
-  successSnackBarMessage({required String message, required String head}) {
-    return Get.snackbar(
-      head,
-      message,
+  void snackBarMessage({required String message, required String head, Color? color, bool isError = true}) {
+    Get.snackbar(head, message,
       colorText: Colors.white,
       duration: const Duration(seconds: 3),
       borderRadius: 20,
       margin: const EdgeInsets.all(20),
-      backgroundColor: Colors.green,
+      backgroundColor: isError ? Colors.red : Colors.green,
     );
   }
 
+  // kept for backwards-compat but no longer used inside this class
   Response? checkResponse(Response response) {
-    log("RESPONSE :${response.body}");
-    final errorModel = ErrorModel.fromJson(response.body);
-
     switch (response.statusCode) {
       case 200:
       case 201:
-        // successSnackBarMessage(
-        //   message: errorModel.message ?? "Success",
-        //   head: "Success",
-        // );
         return response;
-
       case 400:
       case 401:
       case 404:
       case 409:
       case 422:
-        snackBarMessage(
-          message: errorModel.message ?? "Something went wrong",
-          head: "Error",
-        );
+        snackBarMessage(message: ErrorModel.fromJson(response.body).message ?? "Something went wrong", head: "Error");
         return null;
-
       default:
         snackBarMessage(message: "Check Internet Connection", head: "Error");
         return null;

@@ -32,7 +32,7 @@ class _HomeStayDetailsScreenState extends State<HomeStayDetailsScreen> {
       final result = await ServiceProvider().detailHomeStayApi(id);
 
       setState(() {
-        hotelDetailModel = result;
+        hotelDetailModel = null;
         // isLoading = false;
       });
     } catch (e) {

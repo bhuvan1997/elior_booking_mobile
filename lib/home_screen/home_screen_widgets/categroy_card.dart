@@ -20,7 +20,7 @@ class CategoryCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(24),
       onTap: onTap,
       child: Container(
-        height: 120,
+        height: 110,
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -49,7 +49,7 @@ class CategoryCard extends StatelessWidget {
             Text(
               label,
               style: GoogleFonts.poppins(
-                fontSize: 15,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: iconColor,
               ),

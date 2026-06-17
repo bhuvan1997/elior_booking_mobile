@@ -492,12 +492,12 @@ class _PassengerInformationScreenState
                         final bookingData = response["data"];
                         Get.to(() => BookingConfirmedScreen(data: bookingData));
                         // Get.to(BookingConfirmedScreen());
-                        ServiceProvider().successSnackBarMessage(
-                          head: "Success",
-                          message:
-                              response["message"] ??
-                              "Seat booked successfully!",
-                        );
+                        // ServiceProvider().successSnackBarMessage(
+                        //   head: "Success",
+                        //   message:
+                        //       response["message"] ??
+                        //       "Seat booked successfully!",
+                        // );
                       } else {
                         ServiceProvider().snackBarMessage(
                           head: "Error",

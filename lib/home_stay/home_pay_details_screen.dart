@@ -21,7 +21,7 @@ class ReviewHomeBookingScreen extends StatefulWidget {
 }
 
 class _ReviewHomeBookingScreenState extends State<ReviewHomeBookingScreen> {
-  final AccData hotelBooking = Get.arguments;
+  final AccommodationBookingData hotelBooking = Get.arguments;
 
   // ⭐ Payment option radio button
   int paymentOption = 1; // 1 = Full, 2 = 10%

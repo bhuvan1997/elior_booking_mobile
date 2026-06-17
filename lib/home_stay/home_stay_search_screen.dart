@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:elior/home_stay/home_stay_booking_detail.dart';
 import 'package:elior/response_model/filter_model.dart';
+import 'package:elior/response_model/property/property_search_response.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -9,7 +10,6 @@ import 'package:intl/intl.dart';
 import '../network/service_provider.dart';
 import '../response_model/fav_model/add_fav_moodel.dart';
 import '../response_model/search_filter_model.dart';
-import '../response_model/search_hotel_response.dart';
 import '../response_model/search_sorting_model.dart';
 import '../utils/storage.dart';
 import '../utils/translator_service.dart';
@@ -22,9 +22,9 @@ class HomeStaySearchScreen extends StatefulWidget {
 }
 
 class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
-  final SearchHotelModel model = Get.arguments;
+  final PropertySearchResponse model = Get.arguments;
   late TextEditingController _searchController;
-  List<Data> filteredHotels = [];
+  List<Property> filteredHotels = []; // Changed from List<Data> to List<Property>
   var isEditable = false;
   DateTime? checkInDate;
   DateTime? checkOutDate;
@@ -34,7 +34,12 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    filteredHotels = model.data ?? []; // initial list
+
+    // Convert Data to Property for filteredHotels
+    if (model.data != null) {
+      filteredHotels = [];//model.data!.map((data) => Property.fromData(data)).toList();
+    }
+
     _translateHotels();
     locationController.text = model.searchParams?.search ?? "";
     checkInDate = model.searchParams?.startDate != null
@@ -42,10 +47,10 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
         : DateTime.now();
     checkOutDate = model.searchParams?.endDate != null
         ? DateTime.tryParse(model.searchParams!.endDate!)
-        : DateTime.now().add(Duration(days: 1));
+        : DateTime.now().add(const Duration(days: 1));
   }
 
-  SearchHotelModel searchHotelModel = SearchHotelModel();
+  PropertySearchResponse searchHotelModel = PropertySearchResponse();
 
   Future<void> _translateHotels() async {
     if (filteredHotels.isNotEmpty) {
@@ -86,7 +91,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
     return DateFormat('yyyy-MM-dd').format(date);
   }
 
-  bool _isLoading = false; // Add at top of _HomeStaySearchScreenState
+  bool _isLoading = false;
 
   Future<void> searchHotel() async {
     setState(() => _isLoading = true);
@@ -98,8 +103,10 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
       );
 
       if (searchHotelModel.status == true && searchHotelModel.data != null) {
+        // FIX: Convert Property list to filteredHotels (already List<Property>)
         filteredHotels = searchHotelModel.data!;
-        model.data = searchHotelModel.data; // 👈 keeps model updated
+        // Update model.data with Property list
+        model.data = [];//searchHotelModel.data!.map((property) => Data.fromProperty(property)).toList();
         await _translateHotels();
       } else {
         filteredHotels = [];
@@ -113,13 +120,14 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
 
   void _filterHotels(String query) {
     setState(() {
-      List<Data> sourceList = [];
+      List<Property> sourceList = [];
 
       // Always use the most recent data (from API if available)
       if (searchHotelModel.data != null && searchHotelModel.data!.isNotEmpty) {
         sourceList = searchHotelModel.data!;
       } else if (model.data != null && model.data!.isNotEmpty) {
-        sourceList = model.data!;
+        // Convert Data to Property for filtering
+        sourceList = [];//model.data!.map((data) => Property.fromData(data)).toList();
       }
 
       if (query.isEmpty) {
@@ -164,10 +172,8 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
   Future<void> filterFetchHotels() async {
     setState(() => _isLoading = true);
     try {
-      // ✅ Fetch data from your API
       filterModel = await ServiceProvider().filterHomeStayApi();
 
-      // ✅ Once data is fetched successfully, open filter UI
       if (filterModel.status == true) {
         _openFilterBottomSheet();
       } else {
@@ -186,10 +192,8 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
   Future<void> filterSortHotels() async {
     setState(() => _isLoading = true);
     try {
-      // ✅ Fetch data from your API
       filterModel = await ServiceProvider().filterHomeStayApi();
 
-      // ✅ Once data is fetched successfully, open filter UI
       if (filterModel.status == true) {
         _openFilterSortSheet();
       } else {
@@ -204,6 +208,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
       setState(() => _isLoading = false);
     }
   }
+
   Set<int> favoriteIds = {};
   SelectFaModel selectFaModel = SelectFaModel();
 
@@ -225,6 +230,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
       debugPrint("Error : $e");
     }
   }
+
   SearchFilterModel searchFilterModel = SearchFilterModel();
   SearchSotingModel searchSotingModel = SearchSotingModel();
 
@@ -236,41 +242,35 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
   }) async {
     setState(() => _isLoading = true);
     try {
-      // 🔹 Call your API (This part is fine)
       searchFilterModel = await ServiceProvider().searchFilterHomeApi(
         search: locationController.text.trim(),
         startDate: formatDate(checkInDate),
         endDate: formatDate(checkOutDate),
-        // starRatings: stars,
         amenities: features,
         rules: rules,
         pricing: pricing,
       );
 
-      // 🔹 FIX: Update the UI list and the source model list
       if (searchFilterModel.data != null &&
           searchFilterModel.data!.isNotEmpty) {
-        // 1. Convert Datams list to Data list for filteredHotels
-        // You MUST ensure Data.fromDatam(d) correctly maps Datams to Data
-        List<Data> newFilteredList = searchFilterModel.data!
-            .map((d) => Data.fromDatam(d))
+        // FIX: Convert Datams to Property
+        List<Property> newFilteredList = searchFilterModel.data!
+            .map((d) => Property.fromDatam(d))
             .toList();
 
         filteredHotels = newFilteredList;
-
-        // 2. IMPORTANT: Update the source model's data list.
-        // This ensures the local search (_filterHotels) works on the newly filtered data.
         searchHotelModel.data = newFilteredList;
+
+        // Also update model.data for consistency
+        model.data = [];//newFilteredList.map((property) => Data.fromProperty(property)).toList();
 
         await _translateHotels();
       } else {
         filteredHotels = [];
-        searchHotelModel.data = []; // Also clear the source if no results
+        searchHotelModel.data = [];
       }
 
-      // 🔹 Refresh UI and close the bottom sheet
       setState(() {});
-      // Use Get.back() to close the bottom sheet
       if (Get.isBottomSheetOpen == true) {
         Get.back();
       }
@@ -284,7 +284,6 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
   Future<void> searchHotelWithSorting({String? sorting}) async {
     setState(() => _isLoading = true);
     try {
-      // 🔹 Call your API (This part is fine)
       searchSotingModel = await ServiceProvider().searchSortingHomeApi(
         search: locationController.text.trim(),
         startDate: formatDate(checkInDate),
@@ -292,35 +291,31 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
         sort: sorting ?? "",
       );
 
-      // 🔹 FIX: Update the UI list and the source model list
       if (searchSotingModel.data != null &&
           searchSotingModel.data!.isNotEmpty) {
-        // 1. Convert Datams list to Data list for filteredHotels
-        // You MUST ensure Data.fromDatam(d) correctly maps Datams to Data
-        List<Data> newFilteredList = searchSotingModel.data!
-            .map((d) => Data.fromDatams(d))
+        // FIX: Convert DataSort to Property
+        List<Property> newFilteredList = searchSotingModel.data!
+            .map((d) => Property.fromDataSort(d))
             .toList();
 
         filteredHotels = newFilteredList;
-
-        // 2. IMPORTANT: Update the source model's data list.
-        // This ensures the local search (_filterHotels) works on the newly filtered data.
         searchHotelModel.data = newFilteredList;
+
+        // Also update model.data for consistency
+        model.data = [];//newFilteredList.map((property) => Data.fromProperty(property)).toList();
 
         await _translateHotels();
       } else {
         filteredHotels = [];
-        searchHotelModel.data = []; // Also clear the source if no results
+        searchHotelModel.data = [];
       }
 
-      // 🔹 Refresh UI and close the bottom sheet
       setState(() {});
-      // Use Get.back() to close the bottom sheet
       if (Get.isBottomSheetOpen == true) {
         Get.back();
       }
     } catch (e) {
-      debugPrint('Error while searching with filters: $e');
+      debugPrint('Error while searching with sorting: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -345,7 +340,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                   BoxShadow(
                     color: Colors.black12,
                     blurRadius: 5,
-                    offset: Offset(0, 3),
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
@@ -357,7 +352,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                     onTap: () {
                       filterSortHotels();
                     },
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(30),
                       bottomLeft: Radius.circular(30),
                     ),
@@ -368,8 +363,8 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.sort, color: Colors.white),
-                          SizedBox(width: 6),
+                          const Icon(Icons.sort, color: Colors.white),
+                          const SizedBox(width: 6),
                           Text(
                             'Sort',
                             style: TextStyle(
@@ -390,7 +385,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                     onTap: () {
                       filterFetchHotels();
                     },
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(30),
                       bottomRight: Radius.circular(30),
                     ),
@@ -401,8 +396,8 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.filter_list, color: Colors.white),
-                          SizedBox(width: 6),
+                          const Icon(Icons.filter_list, color: Colors.white),
+                          const SizedBox(width: 6),
                           Text(
                             'Filter',
                             style: TextStyle(
@@ -427,12 +422,12 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
             Container(
               color: Colors.white,
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 13.0, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 13.0, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -441,7 +436,6 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
-
                           children: [
                             IconButton(
                               icon: const Icon(
@@ -455,7 +449,6 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.start,
-
                               children: [
                                 Text(
                                   model.searchParams?.search ?? "",
@@ -465,12 +458,8 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                // SizedBox(height: 3),
                                 GestureDetector(
-                                  onTap: () {
-                                    
-                                  },
-                                      // Get.off(HomeScreen()),
+                                  onTap: () {},
                                   child: _buildDateCard(
                                     Icons.calendar_today,
                                     "${formatDatess(model.searchParams?.startDate)} - ${formatDatess(model.searchParams?.endDate)}",
@@ -486,7 +475,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                               isSearch = !isSearch;
                             });
                           },
-                          child: Icon(Icons.search, color: Colors.orange),
+                          child: const Icon(Icons.search, color: Colors.orange),
                         ),
                       ],
                     ),
@@ -651,7 +640,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Divider(),
+                  const Divider(),
                   Text(
                     title,
                     style: const TextStyle(
@@ -784,7 +773,6 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                                 showAllRules = !showAllRules;
                               }),
                             ),
-
                             buildExpandableChipSection(
                               title: "Hotel Price Range",
                               options: pricingRanges,
@@ -860,7 +848,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
-          Row(children: [const SizedBox(width: 10)]),
+          const Row(children: [SizedBox(width: 10)]),
           const SizedBox(height: 16),
           TextField(
             controller: _searchController,
@@ -882,9 +870,8 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
     );
   }
 
-  /// 🎛 Filter button
   void _openFilterSortSheet() {
-    if (filterModel == null || filterModel!.sorting == null) {
+    if (filterModel.sorting == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sorting options not available')),
       );
@@ -892,7 +879,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
     }
 
     // Convert Sorting object → Map<String, dynamic>
-    final Map<String, dynamic> sortingOptions = filterModel!.sorting!.toJson();
+    final Map<String, dynamic> sortingOptions = filterModel.sorting!.toJson();
 
     showModalBottomSheet(
       context: context,
@@ -987,7 +974,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                         Navigator.pop(context);
                         setState(() => selectedSort = tempSelectedSort);
 
-                        // ✅ Call the API with the selected sort value (e.g. "price_asc")
+                        // ✅ Call the API with the selected sort value
                         await searchHotelWithSorting(sorting: selectedSort);
                       },
                       style: ElevatedButton.styleFrom(
@@ -1023,7 +1010,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
         children: [
           Text(
             "Show Properties in ${locationController.text ?? ""}",
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.orange,
@@ -1037,6 +1024,24 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
 
   /// 🏨 Hotel list
   Widget _buildHotelList() {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (filteredHotels.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Text('No hotels found'),
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       shrinkWrap: true,
@@ -1066,7 +1071,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
   }
 
   /// 🏨 Beautiful hotel card (modern style)
-  Widget _buildHotelCard(Data data) {
+  Widget _buildHotelCard(Property data) {
     String imageUrl = (data.images?.isNotEmpty ?? false)
         ? data.images!.first
         : "https://via.placeholder.com/400";
@@ -1098,6 +1103,15 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 200,
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                      ),
+                    );
+                  },
                 ),
                 Container(
                   height: 200,
@@ -1144,7 +1158,6 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                     ),
                   ),
                 ),
-
               ],
             ),
           ),
@@ -1158,15 +1171,29 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      data.name ?? "",
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        data.name ?? "",
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-
-
+                    Row(
+                      children: [
+                        Icon(Icons.star, size: 16, color: Colors.amber.shade600),
+                        const SizedBox(width: 4),
+                        Text(
+                          "${data.starRating?.toString() ?? "0"}/5",
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -1176,7 +1203,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        "${data.city ?? ""}, ${data.country ?? ""}",
+                        data.translatedCityCountry ?? "${data.city ?? ""}, ${data.country ?? ""}",
                         style: const TextStyle(
                           fontSize: 13,
                           color: Colors.grey,
@@ -1187,13 +1214,13 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  "Check-In: ${formatTime(data.checkInTime.toString())} | Check-out: ${formatTime(data.checkOutTime.toString())} ",
+                  "Check-In: ${formatTime(data.checkInTime?.toString() ?? "")} | Check-out: ${formatTime(data.checkOutTime?.toString() ?? "")}",
                 ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
                     Text(
-                      " ${(data.currency ?? "")}",
+                      "${data.currency ?? ""}",
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -1201,7 +1228,7 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
                       ),
                     ),
                     Text(
-                      " ${(data.pricePerNight ?? "")} /Night",
+                      " ${data.pricePerNight ?? ""} /Night",
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -1334,19 +1361,9 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
       padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
       decoration: BoxDecoration(
         color: Colors.transparent,
-        // borderRadius: BorderRadius.circular(16),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: Colors.black12,
-        //     blurRadius: 8,
-        //     offset: const Offset(0, 4),
-        //   ),
-        // ],
       ),
       child: Row(
         children: [
-          // Icon(icon, color: Colors.orangeGrey.shade400, size: 22),
-          // const SizedBox(width: 10),
           Text(
             text,
             style: const TextStyle(
@@ -1379,10 +1396,10 @@ class _HomeStaySearchScreenState extends State<HomeStaySearchScreen> {
   }
 }
 
-/// Hotel Translator
+/// Hotel Translator - Updated to work with Property
 class HotelTranslator {
   static Future<void> translateHotels(
-      List<Data> hotels,
+      List<Property> hotels,
       String langCode,
       ) async {
     final translator = TranslationService();

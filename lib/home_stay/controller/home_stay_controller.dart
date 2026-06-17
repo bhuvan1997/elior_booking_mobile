@@ -1,3 +1,4 @@
+import 'package:elior/response_model/property/property_search_response.dart';
 import 'package:elior/response_model/search_hotel_response.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -7,7 +8,7 @@ import '../../network/service_provider.dart';
 import '../../response_model/home_stay_respnse/search_homeStay_model.dart';
 
 class HomeStayController extends GetxController {
-  SearchHotelModel searchHotelModel = SearchHotelModel();
+  PropertySearchResponse searchHotelModel = PropertySearchResponse();
   TextEditingController searchLocation = TextEditingController();
   DateTime? checkInDate;
   DateTime? checkOutDate;

@@ -1,5 +1,7 @@
 import 'package:elior/app_values/app_theme.dart';
+import 'package:elior/constatnt/assets_image.dart';
 import 'package:elior/hotel_booking/seach_screen.dart';
+import 'package:elior/utils/data_utils.dart';
 import 'package:elior/widgets/app_button.dart';
 import 'package:elior/widgets/app_text_field.dart';
 import 'package:elior/widgets/toolbar.dart';
@@ -29,6 +31,25 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
 
   final _formKey = GlobalKey<FormState>();
 
+  String? slug;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments as String?;
+    if (slug == null && args != null) {
+      slug = args;
+      controller.setSlug(args);
+    }
+  }
+
+  String get _appBarText => HotelHomePageUtils.getAppBarText(slug ?? "");
+  String get _pageText1 => HotelHomePageUtils.getPageText1(slug ?? "");
+  String get _pageText2 => HotelHomePageUtils.getPageText2(slug ?? "");
+  String get _searchText => HotelHomePageUtils.getSearchText(slug ?? "");
+
+
+
   @override
   void dispose() {
     checkInController.dispose();
@@ -42,7 +63,7 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
       init: controller,
       builder: (_) => Scaffold(
         backgroundColor: AppTheme.backgroundColor,
-        appBar: getAppBar(context, "Search Hotels", centerTitle: false),
+        appBar: getAppBar(context, _appBarText, centerTitle: false),
 
         body: GestureDetector(
           onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -51,9 +72,9 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
               Container(
                 width: double.infinity,
                 height: double.infinity,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage('assets/icons/pools.jpg'),
+                    image: AssetImage(slug == "hotel" ? 'assets/icons/pools.jpg' : AssetsScreen.homeStayBackground),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -76,7 +97,7 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Find your next stay!",
+                            _pageText1,
                             style: GoogleFonts.poppins(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
@@ -87,7 +108,7 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
                           const SizedBox(height: 8),
 
                           Text(
-                            "Discover the perfect stay with Elior Booking",
+                            _pageText2,
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               color: AppTheme.black,
@@ -100,7 +121,7 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
                           AppTextField(
                             controller: controller.searchLocation,
                             onChanged: controller.fetchSuggestions,
-                            placeholder: "Search with Hotel or Area name",
+                            placeholder: _searchText,
                             prefixIcon: const Icon(
                               Icons.location_on_outlined,
                               color: AppTheme.appThemeColor,
@@ -205,8 +226,13 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
 
                               final model = controller.searchHotelModel;
 
+                              Map<String, dynamic> args = {
+                                "model": model,
+                                "slug": slug
+                              };
+
                               if (model.status == true) {
-                                Get.to(() => SearchScreen(), arguments: model);
+                                Get.to(() => HotelHomeResultScreen(), arguments: args);
                               } else {
                                 Get.snackbar(
                                   "Error",

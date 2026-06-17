@@ -1,9 +1,10 @@
+import 'package:elior/response_model/booking_data.dart';
 import 'package:flutter/material.dart';
 import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/utils/storage.dart';
 
 class RoomInfoCard extends StatelessWidget {
-  final dynamic hotelBooking;
+  final BookingData hotelBooking;
 
   const RoomInfoCard({super.key, required this.hotelBooking});
 

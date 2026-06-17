@@ -168,6 +168,8 @@ class DataSort {
     status = json['status']?.toString();
   }
 
+  int? get isFavourite => null;
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

@@ -10,5 +10,7 @@ class AssetsScreen{
   static const String eliordasAppLogo = 'assets/icons/eliordas.png';
   static const String poolAppLogo = 'assets/icons/pools.jpg';
   static const String searchIconOrange = 'assets/icons/search_icon_orange.png';
+  static const String homeStayBackground = 'assets/icons/homestay.jpg';
+  static const String busBooking = 'assets/icons/bus_booking.png';
 
 }
