@@ -11,6 +11,7 @@ import 'package:elior/response_model/fav_model/get_fav_model.dart';
 import 'package:elior/response_model/final_payment_model/final_payment_model.dart';
 import 'package:elior/response_model/final_payment_model/payment_initiated_model.dart';
 import 'package:elior/response_model/forgot_model_response.dart';
+import 'package:elior/response_model/get_all_coupons_response.dart';
 import 'package:elior/response_model/home_stay_respnse/homestay_suggestion_response.dart';
 import 'package:elior/response_model/login_model.dart';
 import 'package:elior/response_model/nearby_properties_response.dart';
@@ -44,7 +45,7 @@ import '../response_model/review_model.dart';
 import '../response_model/room_available_response.dart';
 import '../response_model/search_filter_model.dart';
 import '../response_model/search_sorting_model.dart';
-import '../response_model/transport_response/bus_route_response.dart';
+import '../response_model/transport_response/bus_route_response.dart' hide BusRouteModel;
 import '../response_model/transport_response/bus_seat_botttom_model.dart';
 import '../response_model/transport_response/pickup_model.dart';
 import '../response_model/trip_model/travel_vlogs.dart';
@@ -65,12 +66,32 @@ class ServiceProvider {
       T fallback, {
         bool showLoad = true,
       }) async {
-    if (showLoad) showLoader();
-    final res = await ApiService().get(url);
-    if (showLoad) hideLoader();
-    if (_ok(res)) return fromJson(res.body);
-    _logError(url, res.body);
-    return fallback;
+    try {
+      if (showLoad) showLoader();
+
+      final res = await ApiService().get(url);
+
+      if (showLoad) hideLoader();
+
+      print("RESPONSE BODY");
+      print(res.body);
+
+      if (_ok(res)) {
+        return fromJson(res.body);
+      }
+
+      _logError(url, res.body);
+
+      return fallback;
+    } catch (e, stack) {
+      print("GET ERROR");
+      print(e);
+      print(stack);
+
+      if (showLoad) hideLoader();
+
+      rethrow;
+    }
   }
 
   /// POST → parse.
@@ -94,7 +115,7 @@ class ServiceProvider {
       (res.statusCode == 200 || res.statusCode == 201) && res.body != null;
 
   void _logError(String url, dynamic body) =>
-      log("❌ [$url] → $body");
+      print("❌ [$url] → $body");
 
   // ─── Auth ──────────────────────────────────────────────────────────────────
 
@@ -230,7 +251,7 @@ class ServiceProvider {
   Future<BookingHistoryModel> bookingHostoryApi() =>
       _get(ApiConstants.bookingHistory, BookingHistoryModel.fromJson, BookingHistoryModel());
 
-  Future<NearbyPropertiesResponse> getNearbyProperties() => _get(ApiConstants.getNearbyProperties, NearbyPropertiesResponse.fromJson, NearbyPropertiesResponse());
+  Future<NearbyPropertiesResponse> getNearbyProperties() => _get(ApiConstants.getNearbyProperties, NearbyPropertiesResponse.fromJson, NearbyPropertiesResponse(), showLoad: true);
 
   Future<BookingHistoryDetails> bookingHistoryDetail(int id) =>
       _get("${ApiConstants.baseUrl}/get-booking-history-by-id?booking_id=$id", BookingHistoryDetails.fromJson, BookingHistoryDetails(), showLoad: false);
@@ -370,7 +391,7 @@ class ServiceProvider {
 
   // ─── Transport / Bus ───────────────────────────────────────────────────────
 
-  Future<BusRouteModel> busRouteApi({
+  Future<BusListResponse> busRouteApi({
     required String origin,
     required String destination,
     required String journeyDate,
@@ -378,12 +399,12 @@ class ServiceProvider {
       _post(
         ApiConstants.searchBusRoute,
         {"origin": origin, "destination": destination, "journey_date": journeyDate},
-        BusRouteModel.fromJson,
-        BusRouteModel(),
+        BusListResponse.fromJson,
+        BusListResponse(),
       );
 
-  Future<BusSeatModel> busSeatApi({required int busId, required int busRouteId}) =>
-      _get("${ApiConstants.baseUrl}/bus-seat-selection?bus_id=$busId&bus_route_id=$busRouteId", BusSeatModel.fromJson, BusSeatModel());
+  Future<BusSeatLayoutResponse> busSeatApi({required int busId, required int busRouteId}) =>
+      _get("${ApiConstants.baseUrl}/bus-seat-selection?bus_id=$busId&bus_route_id=$busRouteId", BusSeatLayoutResponse.fromJson, BusSeatLayoutResponse(), showLoad: true);
 
   Future<BusSeatBottomModel> busSeatBottomDetailApi({required int busId, required int busRouteId}) =>
       _get("${ApiConstants.baseUrl}/bus-seat-selection-details?bus_id=$busId&bus_route_id=$busRouteId", BusSeatBottomModel.fromJson, BusSeatBottomModel());
@@ -475,10 +496,10 @@ class ServiceProvider {
       _get(ApiConstants.getMyFav, GetFavModel.fromJson, GetFavModel());
 
   Future<SelectFaModel> selectFavProperty({required int propertyId}) =>
-      _post(ApiConstants.selectMyFav, {"property_id": propertyId}, SelectFaModel.fromJson, SelectFaModel());
+      _post(ApiConstants.selectMyFav, {"property_id": propertyId}, SelectFaModel.fromJson, SelectFaModel(), showLoad: false);
 
   Future<SelectFaModel> removeFavProperty({required int propertyId}) =>
-      _post(ApiConstants.removeFav, {"property_id": propertyId}, SelectFaModel.fromJson, SelectFaModel());
+      _post(ApiConstants.removeFav, {"property_id": propertyId}, SelectFaModel.fromJson, SelectFaModel(), showLoad: false);
 
   // ─── Reviews ──────────────────────────────────────────────────────────────
 
@@ -533,6 +554,9 @@ class ServiceProvider {
     }
     return [];
   }
+
+  Future<CouponResponse> fetchAllCoupons() => _get(ApiConstants.getAllCoupons, CouponResponse.fromJson, CouponResponse());
+
 
   // ─── UI helpers ────────────────────────────────────────────────────────────
 

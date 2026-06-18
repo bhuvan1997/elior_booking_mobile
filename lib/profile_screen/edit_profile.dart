@@ -3,11 +3,16 @@ import 'dart:io';
 import 'package:country_picker/country_picker.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:elior/hotel_booking/bottom_navigation_screen.dart';
+import 'package:elior/widgets/app_button.dart';
+import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../app_values/app_theme.dart';
 import '../utils/storage.dart';
+import '../widgets/app_text_field.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -199,159 +204,250 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Edit Profile")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            GestureDetector(
-              onTap: pickImage,
-              child: Stack(
-                children: [
-                  buildProfileAvatar(),
-                  const Positioned(
-                    bottom: 0,
-                    right: 4,
-                    child: CircleAvatar(
-                      radius: 16,
-                      backgroundColor: Colors.white,
-                      child: Icon(Icons.camera_alt),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            /// Text fields
-            buildField(nameCtrl, "Full Name", Icons.person),
-            const SizedBox(height: 15),
-            buildField(emailCtrl, "Email", Icons.email),
-            const SizedBox(height: 15),
-
-            Row(
+      appBar: getAppBar(context, "Edit Profile", centerTitle: false),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 100),
+            child: Column(
               children: [
-                GestureDetector(
-                  onTap: () {
-                    showCountryPicker(
-                      context: context,
-                      showPhoneCode: true,
-                      onSelect: (c) {
-                        setState(() => selectedCountryCode = "+${c.phoneCode}");
-                      },
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 18,
-                      horizontal: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(selectedCountryCode),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: buildField(
-                    mobileCtrl,
-                    "Mobile",
-                    Icons.phone,
-                    keyboardType: TextInputType.phone,
-                  ),
-                ),
+                _buildHeader(),
+
+                const SizedBox(height: 24),
+
+                _buildFormCard(),
               ],
             ),
+          ),
 
-            const SizedBox(height: 15),
-
-            buildField(
-              dobCtrl,
-              "Date of Birth",
-              Icons.calendar_today,
-              readOnly: true,
-              onTap: () async {
-                DateTime? picked = await showDatePicker(
-                  context: context,
-                  initialDate:
-                      DateTime.tryParse(dobCtrl.text) ?? DateTime.now(),
-                  firstDate: DateTime(1900),
-                  lastDate: DateTime(2100),
-                );
-                if (picked != null) {
-                  dobCtrl.text = picked.toIso8601String().split("T").first;
-                }
-              },
-            ),
-
-            const SizedBox(height: 15),
-            buildField(addressCtrl, "Address", Icons.home),
-            const SizedBox(height: 30),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: isLoading ? null : submitForm,
-                // DISABLED WHEN LOADING
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  elevation: 2,
-                ),
-                child: isLoading
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text(
-                        "Update Profile",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: AppButton(title: "Update Profile", onTap: isLoading ? null : submitForm,),
+          ),
+        ],
       ),
     );
   }
 
-  Widget buildField(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    bool readOnly = false,
-    VoidCallback? onTap,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return TextFormField(
-      controller: controller,
-      readOnly: readOnly,
-      onTap: onTap,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.blueAccent),
-        labelText: label,
-        filled: true,
-        fillColor: Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
+  Widget _buildHeader() {
+    return GestureDetector(
+      onTap: pickImage,
+      child: Stack(
+        children: [
+          Container(
+            height: 110,
+            width: 110,
+            padding: const EdgeInsets.all(4),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: ClipOval(
+              child: _buildProfileAvatarImage(),
+            ),
+          ),
+
+          Positioned(
+            right: 4,
+            bottom: 4,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.appThemeColor,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.camera_alt,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _buildProfileAvatarImage() {
+    final savedPath = LocalStorages().getProfileImage();
+
+    if (localPickedImage != null &&
+        localPickedImage!.existsSync()) {
+      return Image.file(
+        localPickedImage!,
+        fit: BoxFit.cover,
+      );
+    }
+
+    if (savedPath != null &&
+        File(savedPath).existsSync()) {
+      return Image.file(
+        File(savedPath),
+        fit: BoxFit.cover,
+      );
+    }
+
+    if (savedPath != null &&
+        savedPath.startsWith("http")) {
+      return Image.network(
+        savedPath,
+        fit: BoxFit.cover,
+      );
+    }
+
+    return Image.asset(
+      "assets/images/default_user.png",
+      fit: BoxFit.cover,
+    );
+  }
+
+  Widget _buildFormCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          AppTextField(
+            controller: nameCtrl,
+            label: "Full Name",
+            placeholder: "Enter your full name",
+            prefixIcon: const Icon(
+              Icons.person_outline,
+              color: AppTheme.appThemeColor,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          AppTextField(
+            controller: emailCtrl,
+            label: "Email Address",
+            placeholder: "Enter your email",
+            keyboardType: TextInputType.emailAddress,
+            prefixIcon: const Icon(
+              Icons.email_outlined,
+              color: AppTheme.appThemeColor,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          _buildPhoneField(),
+
+          const SizedBox(height: 16),
+
+          AppTextField(
+            controller: dobCtrl,
+            label: "Date of Birth",
+            placeholder: "Select date of birth",
+            readOnly: true,
+            onTap: _selectDob,
+            prefixIcon: const Icon(
+              Icons.cake_outlined,
+              color: AppTheme.appThemeColor,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          AppTextField(
+            controller: addressCtrl,
+            label: "Address",
+            placeholder: "Enter your address",
+            maxLines: 3,
+            prefixIcon: const Icon(
+              Icons.location_on_outlined,
+              color: AppTheme.appThemeColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhoneField() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        InkWell(
+          onTap: () {
+            showCountryPicker(
+              context: context,
+              showPhoneCode: true,
+              onSelect: (country) {
+                setState(() {
+                  selectedCountryCode = "+${country.phoneCode}";
+                });
+              },
+            );
+          },
+          child: Container(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.grey.shade300,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  selectedCountryCode,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Icon(Icons.keyboard_arrow_down),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: AppTextField(
+            controller: mobileCtrl,
+            label: "Mobile Number",
+            placeholder: "Enter mobile number",
+            keyboardType: TextInputType.phone,
+            prefixIcon: const Icon(
+              Icons.phone_outlined,
+              color: AppTheme.appThemeColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _selectDob() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate:
+      DateTime.tryParse(dobCtrl.text) ??
+          DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null) {
+      dobCtrl.text =
+          picked.toIso8601String().split("T").first;
+    }
   }
 }

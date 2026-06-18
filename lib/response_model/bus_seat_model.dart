@@ -1,42 +1,53 @@
-class BusSeatModel {
-  bool? status;
-  String? message;
-  Data? data;
+class BusSeatLayoutResponse {
+  final bool? status;
+  final String? message;
+  final BusSeatLayoutData? data;
 
-  BusSeatModel({this.status, this.message, this.data});
+  BusSeatLayoutResponse({
+    this.status,
+    this.message,
+    this.data,
+  });
 
-  BusSeatModel.fromJson(Map<String, dynamic> json) {
-    status = json['status'];
-    message = json['message'];
-    data = json['data'] != null ? Data.fromJson(json['data']) : null;
+  factory BusSeatLayoutResponse.fromJson(Map<String, dynamic> json) {
+    return BusSeatLayoutResponse(
+      status: json['status'],
+      message: json['message'],
+      data: json['data'] != null
+          ? BusSeatLayoutData.fromJson(json['data'])
+          : null,
+    );
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['status'] = status;
-    data['message'] = message;
-    if (this.data != null) {
-      data['data'] = this.data!.toJson();
-    }
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+    'status': status,
+    'message': message,
+    'data': data?.toJson(),
+  };
 }
 
-class Data {
-  int? busRouteId;
-  int? busId;
-  String? currency;
-  String? fare;
-  List<Seats>? seats;
-  BusBookHighlight? busBookHighlight;
-  BusRoute? busRoute;
-  BoardingPoint? boardingPoint;
-  DroppingPoint? droppingPoint;
-  List<String>? busFeatures;
+class BusSeatLayoutData {
+  final int? busRouteId;
+  final int? busId;
+  final String? companyName;
+  final String? busModel;
+  final String? busType;
+  final String? currency;
+  final int? fare;
 
-  Data({
+  final List<SeatModel>? seats;
+  final BusBookHighlight? busBookHighlight;
+  final BusRouteModel? busRoute;
+  final BoardingPointModel? boardingPoint;
+  final DroppingPointModel? droppingPoint;
+  final List<String>? busFeatures;
+
+  BusSeatLayoutData({
     this.busRouteId,
     this.busId,
+    this.companyName,
+    this.busModel,
+    this.busType,
     this.currency,
     this.fare,
     this.seats,
@@ -47,71 +58,63 @@ class Data {
     this.busFeatures,
   });
 
-  Data.fromJson(Map<String, dynamic> json) {
-    busRouteId = json['bus_route_id'];
-    busId = json['bus_id'];
-    currency = json['currency'];
-    fare = json['fare'];
-    if (json['seats'] != null) {
-      seats = <Seats>[];
-      json['seats'].forEach((v) {
-        seats!.add(Seats.fromJson(v));
-      });
-    }
-    busBookHighlight = json['busBookHighlight'] != null
-        ? BusBookHighlight.fromJson(json['busBookHighlight'])
-        : null;
-    busRoute =
-    json['busRoute'] != null ? BusRoute.fromJson(json['busRoute']) : null;
-    boardingPoint = json['boardingPoint'] != null
-        ? BoardingPoint.fromJson(json['boardingPoint'])
-        : null;
-    droppingPoint = json['droppingPoint'] != null
-        ? DroppingPoint.fromJson(json['droppingPoint'])
-        : null;
-    busFeatures = (json['bus_features'] as List?)
-        ?.map((e) => e.toString())
-        .toList();
+  factory BusSeatLayoutData.fromJson(Map<String, dynamic> json) {
+    return BusSeatLayoutData(
+      busRouteId: json['bus_route_id'],
+      busId: json['bus_id'],
+      companyName: json['company_name'],
+      busModel: json['bus_model'],
+      busType: json['bus_type'],
+      currency: json['currency'],
+      fare: json['fare'],
+      seats: (json['seats'] as List?)
+          ?.map((e) => SeatModel.fromJson(e))
+          .toList(),
+      busBookHighlight: json['busBookHighlight'] != null
+          ? BusBookHighlight.fromJson(json['busBookHighlight'])
+          : null,
+      busRoute: json['busRoute'] != null
+          ? BusRouteModel.fromJson(json['busRoute'])
+          : null,
+      boardingPoint: json['boardingPoint'] != null
+          ? BoardingPointModel.fromJson(json['boardingPoint'])
+          : null,
+      droppingPoint: json['droppingPoint'] != null
+          ? DroppingPointModel.fromJson(json['droppingPoint'])
+          : null,
+      busFeatures: List<String>.from(json['bus_features'] ?? []),
+    );
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['bus_route_id'] = busRouteId;
-    data['bus_id'] = busId;
-    data['currency'] = currency;
-    data['fare'] = fare;
-    if (seats != null) {
-      data['seats'] = seats!.map((v) => v.toJson()).toList();
-    }
-    if (busBookHighlight != null) {
-      data['busBookHighlight'] = busBookHighlight!.toJson();
-    }
-    if (busRoute != null) {
-      data['busRoute'] = busRoute!.toJson();
-    }
-    if (boardingPoint != null) {
-      data['boardingPoint'] = boardingPoint!.toJson();
-    }
-    if (droppingPoint != null) {
-      data['droppingPoint'] = droppingPoint!.toJson();
-    }
-    data['bus_features'] = busFeatures;
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+    'bus_route_id': busRouteId,
+    'bus_id': busId,
+    'company_name': companyName,
+    'bus_model': busModel,
+    'bus_type': busType,
+    'currency': currency,
+    'fare': fare,
+    'seats': seats?.map((e) => e.toJson()).toList(),
+    'busBookHighlight': busBookHighlight?.toJson(),
+    'busRoute': busRoute?.toJson(),
+    'boardingPoint': boardingPoint?.toJson(),
+    'droppingPoint': droppingPoint?.toJson(),
+    'bus_features': busFeatures,
+  };
 }
 
-class Seats {
-  String? seatNo;
-  String? type;
-  String? deck;
-  int? row;
-  int? col;
-  bool? isWindow;
-  int? extraFare;
-  String? status;
-  bool? isBooked;
+class SeatModel {
+  final String? seatNo;
+  final String? type;
+  final String? deck;
+  final int? row;
+  final int? col;
+  final bool? isWindow;
+  final int? extraFare;
+  final String? status;
+  final bool? isBooked;
 
-  Seats({
+  SeatModel({
     this.seatNo,
     this.type,
     this.deck,
@@ -123,38 +126,38 @@ class Seats {
     this.isBooked,
   });
 
-  Seats.fromJson(Map<String, dynamic> json) {
-    seatNo = json['seat_no'];
-    type = json['type'];
-    deck = json['deck'];
-    row = json['row'];
-    col = json['col'];
-    isWindow = json['is_window'];
-    extraFare = json['extra_fare'];
-    status = json['status'];
-    isBooked = json['is_booked'];
+  factory SeatModel.fromJson(Map<String, dynamic> json) {
+    return SeatModel(
+      seatNo: json['seat_no'],
+      type: json['type'],
+      deck: json['deck'],
+      row: json['row'],
+      col: json['col'],
+      isWindow: json['is_window'],
+      extraFare: json['extra_fare'],
+      status: json['status'],
+      isBooked: json['is_booked'],
+    );
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['seat_no'] = seatNo;
-    data['type'] = type;
-    data['deck'] = deck;
-    data['row'] = row;
-    data['col'] = col;
-    data['is_window'] = isWindow;
-    data['extra_fare'] = extraFare;
-    data['status'] = status;
-    data['is_booked'] = isBooked;
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+    'seat_no': seatNo,
+    'type': type,
+    'deck': deck,
+    'row': row,
+    'col': col,
+    'is_window': isWindow,
+    'extra_fare': extraFare,
+    'status': status,
+    'is_booked': isBooked,
+  };
 }
 
 class BusBookHighlight {
-  String? departureTime;
-  String? arrivalTime;
-  String? departureDate;
-  List<String>? busImages;
+  final String? departureTime;
+  final String? arrivalTime;
+  final String? departureDate;
+  final List<String>? busImages;
 
   BusBookHighlight({
     this.departureTime,
@@ -163,164 +166,137 @@ class BusBookHighlight {
     this.busImages,
   });
 
-  BusBookHighlight.fromJson(Map<String, dynamic> json) {
-    departureTime = json['departure_time'];
-    arrivalTime = json['arrival_time'];
-    departureDate = json['departure_date'];
-    busImages =
-        (json['busImages'] as List?)?.map((e) => e.toString()).toList();
+  factory BusBookHighlight.fromJson(Map<String, dynamic> json) {
+    return BusBookHighlight(
+      departureTime: json['departure_time'],
+      arrivalTime: json['arrival_time'],
+      departureDate: json['departure_date'],
+      busImages: List<String>.from(json['busImages'] ?? []),
+    );
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['departure_time'] = departureTime;
-    data['arrival_time'] = arrivalTime;
-    data['departure_date'] = departureDate;
-    data['busImages'] = busImages;
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+    'departure_time': departureTime,
+    'arrival_time': arrivalTime,
+    'departure_date': departureDate,
+    'busImages': busImages,
+  };
 }
 
-class BusRoute {
-  String? routeName;
-  String? arrivalTime;
-  String? timeDifference;
+class BusRouteModel {
+  final String? routeName;
+  final String? arrivalTime;
+  final String? timeDifference;
 
-  BusRoute({this.routeName, this.arrivalTime, this.timeDifference});
+  BusRouteModel({
+    this.routeName,
+    this.arrivalTime,
+    this.timeDifference,
+  });
 
-  BusRoute.fromJson(Map<String, dynamic> json) {
-    routeName = json['route_name'];
-    arrivalTime = json['arrival_time'];
-    timeDifference = json['time_difference'];
+  factory BusRouteModel.fromJson(Map<String, dynamic> json) {
+    return BusRouteModel(
+      routeName: json['route_name'],
+      arrivalTime: json['arrival_time'],
+      timeDifference: json['time_difference'],
+    );
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['route_name'] = routeName;
-    data['arrival_time'] = arrivalTime;
-    data['time_difference'] = timeDifference;
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+    'route_name': routeName,
+    'arrival_time': arrivalTime,
+    'time_difference': timeDifference,
+  };
 }
 
-class BoardingPoint {
-  String? boardingPointCity;
-  List<BoardingPointStops>? boardingPointStops;
+class BoardingPointModel {
+  final String? boardingPointCity;
+  final List<PointStop>? boardingPointStops;
 
-  BoardingPoint({this.boardingPointCity, this.boardingPointStops});
+  BoardingPointModel({
+    this.boardingPointCity,
+    this.boardingPointStops,
+  });
 
-  BoardingPoint.fromJson(Map<String, dynamic> json) {
-    boardingPointCity = json['boarding_point_city'];
-    if (json['boardingPointStops'] != null) {
-      boardingPointStops = <BoardingPointStops>[];
-      json['boardingPointStops'].forEach((v) {
-        boardingPointStops!.add(BoardingPointStops.fromJson(v));
-      });
-    }
+  factory BoardingPointModel.fromJson(Map<String, dynamic> json) {
+    return BoardingPointModel(
+      boardingPointCity: json['boarding_point_city'],
+      boardingPointStops: (json['boardingPointStops'] as List?)
+          ?.map((e) => PointStop.fromJson(e))
+          .toList(),
+    );
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['boarding_point_city'] = boardingPointCity;
-    if (boardingPointStops != null) {
-      data['boardingPointStops'] =
-          boardingPointStops!.map((v) => v.toJson()).toList();
-    }
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+    'boarding_point_city': boardingPointCity,
+    'boardingPointStops':
+    boardingPointStops?.map((e) => e.toJson()).toList(),
+  };
 }
 
-class BoardingPointStops {
-  int? pointId;
-  String? pointname;
-  String? date;
-  String? time;
-  String? address;
+class DroppingPointModel {
+  final String? droppingPointCity;
+  final List<PointStop>? droppingPointStops;
 
-  BoardingPointStops({
+  DroppingPointModel({
+    this.droppingPointCity,
+    this.droppingPointStops,
+  });
+
+  factory DroppingPointModel.fromJson(Map<String, dynamic> json) {
+    return DroppingPointModel(
+      droppingPointCity: json['dropping_point_city'],
+      droppingPointStops: (json['droppingPointStops'] as List?)
+          ?.map((e) => PointStop.fromJson(e))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'dropping_point_city': droppingPointCity,
+    'droppingPointStops':
+    droppingPointStops?.map((e) => e.toJson()).toList(),
+  };
+}
+
+class PointStop {
+  final int? pointId;
+  final String? pointName;
+  final String? date;
+  final String? time;
+  final String? address;
+
+  PointStop({
     this.pointId,
-    this.pointname,
+    this.pointName,
     this.date,
     this.time,
     this.address,
   });
 
-  BoardingPointStops.fromJson(Map<String, dynamic> json) {
-    pointId = json['point_id'];
-    pointname = json['pointname'];
-    date = json['date'];
-    time = json['time'];
-    address = json['address'];
+  factory PointStop.fromJson(Map<String, dynamic> json) {
+    return PointStop(
+      pointId: json['point_id'],
+      pointName: json['pointname'],
+      date: json['date'],
+      time: json['time'],
+      address: json['address'],
+    );
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['point_id'] = pointId;
-    data['pointname'] = pointname;
-    data['date'] = date;
-    data['time'] = time;
-    data['address'] = address;
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+    'point_id': pointId,
+    'pointname': pointName,
+    'date': date,
+    'time': time,
+    'address': address,
+  };
 }
 
-class DroppingPoint {
-  String? droppingPointCity;
-  List<DroppingPointStops>? droppingPointStops;
+extension SeatLayoutExtension on List<SeatModel> {
+  int get maxRow =>
+      isEmpty ? 0 : map((e) => e.row ?? 0).reduce((a, b) => a > b ? a : b);
 
-  DroppingPoint({this.droppingPointCity, this.droppingPointStops});
-
-  DroppingPoint.fromJson(Map<String, dynamic> json) {
-    droppingPointCity = json['dropping_point_city'];
-    if (json['droppingPointStops'] != null) {
-      droppingPointStops = <DroppingPointStops>[];
-      json['droppingPointStops'].forEach((v) {
-        droppingPointStops!.add(DroppingPointStops.fromJson(v));
-      });
-    }
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['dropping_point_city'] = droppingPointCity;
-    if (droppingPointStops != null) {
-      data['droppingPointStops'] =
-          droppingPointStops!.map((v) => v.toJson()).toList();
-    }
-    return data;
-  }
-}
-
-class DroppingPointStops {
-  int? pointId;
-  String? pointname;
-  String? date;
-  String? time;
-  String? address;
-
-  DroppingPointStops({
-    this.pointId,
-    this.pointname,
-    this.date,
-    this.time,
-    this.address,
-  });
-
-  DroppingPointStops.fromJson(Map<String, dynamic> json) {
-    pointId = json['point_id'];
-    pointname = json['pointname'];
-    date = json['date'];
-    time = json['time'];
-    address = json['address'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['point_id'] = pointId;
-    data['pointname'] = pointname;
-    data['date'] = date;
-    data['time'] = time;
-    data['address'] = address;
-    return data;
-  }
+  int get maxCol =>
+      isEmpty ? 0 : map((e) => e.col ?? 0).reduce((a, b) => a > b ? a : b);
 }

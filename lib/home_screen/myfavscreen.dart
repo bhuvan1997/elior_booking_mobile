@@ -63,6 +63,7 @@ class _MyFavScreenState extends State<MyFavScreen> {
       debugPrint("Error : $e");
     }
   }
+
   String formatDates(DateTime? date) {
     if (date == null) return 'yyyy-MM-dd';
     return DateFormat('yyyy-MM-dd').format(date);
@@ -81,30 +82,27 @@ class _MyFavScreenState extends State<MyFavScreen> {
     if (date == null) return 'yyyy-MM-dd';
     return DateFormat('yyyy-MM-dd').format(date);
   }
+
   // ================= UI =================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: getAppBar(context, "Wishlist",  isLeading: false),
-      // appBar: AppBar(
-      //   backgroundColor: const Color(0xFF0057C2),
-      //   title: const Text(
-      //     "My Favourite Property",
-      //     style: TextStyle(color: Colors.white),
-      //   ),
-      //   centerTitle: true,
-      // ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _buildTripSlider(),
+      appBar: getAppBar(context, "Wishlist", isLeading: false),
+      body: _buildTripSlider(),
     );
   }
 
   // ================= SLIDER =================
 
   Widget _buildTripSlider() {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
     if (bookingHistoryModel.data == null ||
         bookingHistoryModel.data!.isEmpty) {
       return const Center(
@@ -116,20 +114,22 @@ class _MyFavScreenState extends State<MyFavScreen> {
     }
 
     return ListView.builder(
-
       itemCount: bookingHistoryModel.data!.length,
       itemBuilder: (context, index) {
         final data = bookingHistoryModel.data![index];
 
         return Padding(
-          padding:  EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-          child:GestureDetector(
-              onTap: () {
-                Get.to( UnifiedPropertyDetailsScreen(id: data.id??0, fac: data.name ?? "", slug: "hotel",));
-
-              },
-
-              child: _buildHotelCard(data, index)),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: GestureDetector(
+            onTap: () {
+              Get.to(UnifiedPropertyDetailsScreen(
+                id: data.id ?? 0,
+                fac: data.name ?? "",
+                slug: "hotel",
+              ));
+            },
+            child: _buildHotelCard(data, index),
+          ),
         );
       },
     );
@@ -158,10 +158,9 @@ class _MyFavScreenState extends State<MyFavScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // IMAGE + REMOVE BUTTON
+          // IMAGE + HEART BUTTON
           ClipRRect(
-            borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             child: Stack(
               children: [
                 Image.network(
@@ -169,6 +168,18 @@ class _MyFavScreenState extends State<MyFavScreen> {
                   height: 220,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 220,
+                      width: double.infinity,
+                      color: Colors.grey[300],
+                      child: const Icon(
+                        Icons.broken_image,
+                        size: 50,
+                        color: Colors.grey,
+                      ),
+                    );
+                  },
                 ),
 
                 // Gradient
@@ -177,7 +188,7 @@ class _MyFavScreenState extends State<MyFavScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.black.withOpacity(0.4),
+                        Colors.black.withOpacity(0.3),
                         Colors.transparent,
                       ],
                       begin: Alignment.bottomCenter,
@@ -186,7 +197,7 @@ class _MyFavScreenState extends State<MyFavScreen> {
                   ),
                 ),
 
-                // REMOVE FAVORITE BUTTON
+                // REMOVE FAVORITE HEART BUTTON
                 Positioned(
                   top: 12,
                   right: 12,
@@ -196,27 +207,17 @@ class _MyFavScreenState extends State<MyFavScreen> {
 
                       // Remove from UI instantly
                       setState(() {
-                        bookingHistoryModel.data!
-                            .removeAt(index);
+                        bookingHistoryModel.data!.removeAt(index);
                       });
 
-                      // Call API
+                      // Call API to remove from favorites
                       await removeFavApi(id: id);
-
-                      // SnackBar
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              "Removed from favorites"),
-                        ),
-                      );
                     },
-                    child: const CircleAvatar(
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.delete,
-                        color: Colors.grey,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      child: const Icon(
+                        Icons.favorite,
+                        color: Colors.red,
                       ),
                     ),
                   ),
@@ -229,20 +230,17 @@ class _MyFavScreenState extends State<MyFavScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Text(
                         data.name ?? "",
                         style: const TextStyle(
                           fontSize: 18,
-                          fontWeight:
-                          FontWeight.bold,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
@@ -250,14 +248,12 @@ class _MyFavScreenState extends State<MyFavScreen> {
                       children: [
                         Icon(Icons.star,
                             size: 16,
-                            color: Colors.amber
-                                .shade600),
+                            color: Colors.amber.shade600),
                         const SizedBox(width: 4),
                         Text(
                           "${data.starRating}/5",
                           style: const TextStyle(
-                              fontWeight:
-                              FontWeight.w600),
+                              fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -290,15 +286,13 @@ class _MyFavScreenState extends State<MyFavScreen> {
                     Text(
                       "${data.currency ?? ""} ",
                       style: const TextStyle(
-                        fontWeight:
-                        FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
                       "${data.pricePerNight ?? ""} /Night",
                       style: const TextStyle(
-                        fontWeight:
-                        FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],

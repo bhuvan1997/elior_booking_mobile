@@ -5,6 +5,7 @@ import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/auth/login_screen.dart';
 import 'package:elior/home_screen/webview_screen.dart';
 import 'package:elior/profile_screen/profile_screen.dart';
+import 'package:elior/response_model/get_all_coupons_response.dart';
 import 'package:elior/utils/project_utils.dart';
 import 'package:elior/utils/storage.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +19,11 @@ import '../controller/hotel_controller/top_hotel_controller.dart';
 import '../help_support/view.dart';
 import '../home_stay/home_stay_booking_screen.dart';
 import '../hotel_booking/booking_history_screen.dart';
+import '../hotel_booking/hotel_detail.dart';
 import '../hotel_booking/hotel_home_search_screen.dart';
 import '../hotel_booking/trip_detail_screen.dart';
 import '../network/service_provider.dart';
+import '../response_model/property/property_search_response.dart';
 import '../response_model/trip_model/travel_vlogs.dart';
 import '../response_model/trip_model/tripModel.dart';
 import '../transport_booking/date_bus_booking.dart';
@@ -44,10 +47,10 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       fetchBookingHotels();
       travelfetchBookingHotels();
-      controller.fetchNearby();
+
     });
   }
 
@@ -109,13 +112,15 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
               _buildCategoryRow(),
               const SizedBox(height: 20),
 
-              _buildSectionHeader("Nearby Properties", icon: Icons.navigation),
-              _buildNearbyPropertiesCarousel(),
-              const SizedBox(height: 20),
+              if (controller.nearbyProperties.data != null && controller.nearbyProperties.data!.isNotEmpty) ...[
+                _buildSectionHeader("Nearby Properties", icon: Icons.navigation),
+                _buildNearbyPropertiesCarousel(),
+                const SizedBox(height: 20),
+              ],
 
               _buildSectionHeader("Offers Available", icon: Icons.local_offer),
 
-              _buildOffersSection(),
+              _buildOffersSection(controller.couponResponse.data ?? []),
               const SizedBox(height: 20),
 
               _buildSectionHeader(
@@ -219,7 +224,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
                   "No Nearby properties found",
                   style: GoogleFonts.poppins(
                     fontSize: 15,
-                    color: Colors.grey,
+                    color: AppTheme.black,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -280,13 +285,21 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
               tripCurrency: trip.currency ?? "XOF",
               pricePerNight: trip.pricePerNight ?? 0,
               starRating: trip.starRating ?? 0,
-              onTap: () {},
+              onTap: () {
+                Get.to(() => UnifiedPropertyDetailsScreen(
+                  id: trip.id ?? 0,
+                  fac: trip.description ?? "",
+                  slug: "hotel",
+                ));
+              },
             ),
           );
         },
       ),
     );
   }
+
+
 
   Widget _displayCard({
     required String imageUrl,
@@ -622,40 +635,24 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
     );
   }
 
-  Widget _buildOffersSection() {
+  Widget _buildOffersSection(
+      List<Coupon> coupons
+      ) {
     return SizedBox(
       height: 164,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: 3,
+        itemCount: coupons.length,
         separatorBuilder: (_, __) => const SizedBox(width: 14),
         itemBuilder: (context, index) {
-          final offers = [
-            {
-              "code": "ELIOR200",
-              "title": "Get 200 Off on Booking",
-              "image":
-                  "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200",
-            },
-            {
-              "code": "WELCOME10",
-              "title": "10% Off for New Users",
-              "image":
-                  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200",
-            },
-            {
-              "code": "SUMMER25",
-              "title": "Save 25% This Summer",
-              "image":
-                  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200",
-            },
-          ];
+          final image = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200";
+          final offer = coupons[index];
 
           return _offerCard(
-            imageUrl: offers[index]["image"]!,
-            couponCode: offers[index]["code"]!,
-            title: offers[index]["title"]!,
+            imageUrl: image,
+            couponCode: offer.name ?? "NA",
+            title: offer.description ?? "",
           );
         },
       ),
@@ -663,210 +660,291 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
   }
 }
 
-//
-// ✅ Drawer
-//
-
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: Colors.white,
-      child: Column(
-        children: [
-          UserAccountsDrawerHeader(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF6DD5FA), Color(0xFF2980B9)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            accountName: Text(
-              LocalStorages().getName() ?? "",
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-            accountEmail: Text(
-              LocalStorages().getEmail() ?? "",
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Colors.white70,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.horizontal(
+          right: Radius.circular(24),
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                children: [
+                  _sectionTitle("Account"),
+
+                  _drawerTile(
+                    icon: Icons.person_outline,
+                    title: "Profile",
+                    onTap: () => Get.to(const ProfileScreen()),
+                  ),
+
+                  _drawerTile(
+                    icon: Icons.airplane_ticket_outlined,
+                    title: "My Bookings",
+                    onTap: () => Get.to(BookingHistoryScreen()),
+                  ),
+
+                  _drawerTile(
+                    icon: Icons.favorite_border,
+                    title: "Wishlist",
+                    onTap: () => Get.to(MyFavScreen()),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  _sectionTitle("Support"),
+
+                  _drawerTile(
+                    icon: Icons.support_agent_outlined,
+                    title: "Help & Support",
+                    onTap: () => Get.to(ContactUsScreen()),
+                  ),
+
+                  _drawerTile(
+                    icon: Icons.privacy_tip_outlined,
+                    title: "Privacy Policy",
+                    onTap: () {
+                      Get.to(
+                            () => const WebViewScreen(
+                          url:
+                          "https://eliorbooking.com/privacy_mobile",
+                          title: "Privacy Policy",
+                        ),
+                      );
+                    },
+                  ),
+
+                  _drawerTile(
+                    icon: Icons.gavel_outlined,
+                    title: "Terms & Conditions",
+                    onTap: () {
+                      Get.to(
+                            () => const WebViewScreen(
+                          url:
+                          "https://eliorbooking.com/terms_condition_mobile",
+                          title: "Terms & Conditions",
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  _sectionTitle("Business"),
+
+                  _drawerTile(
+                    icon: Icons.home_work_outlined,
+                    title: "List Your Property",
+                    onTap: () {
+                      Get.to(
+                            () => const WebViewScreen(
+                          url:
+                          "https://eliorbooking.com/list_property_mobile",
+                          title: "List Your Property",
+                        ),
+                      );
+                    },
+                  ),
+
+                  _drawerTile(
+                    icon: Icons.info_outline,
+                    title: "About App",
+                    onTap: () {
+                      Get.to(
+                            () => const WebViewScreen(
+                          url:
+                          "https://eliorbooking.com/about_app_mobile",
+                          title: "About App",
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
 
-            currentAccountPicture: GestureDetector(
-              onTap: () {
-                Get.to(const ProfileScreen());
-              },
-              child: CircleAvatar(
-                radius: 40,
-                backgroundColor: Colors.white,
-                child: ClipOval(child: _buildProfileImage()),
+            _logoutButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () => Get.to(const ProfileScreen()),
+          child: Container(
+            height: 86,
+            width: 86,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white,
+                width: 1,
               ),
+            ),
+            child: ClipOval(
+              child: _buildProfileImage(),
             ),
           ),
+        ),
 
-          /// Menu Buttons
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 5),
+        const SizedBox(height: 14),
+
+        Text(
+          LocalStorages().getName() ?? "Guest User",
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.black,
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        Text(
+          LocalStorages().getEmail() ?? "",
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            color: AppTheme.black.withValues(alpha: 0.5),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: 6,
+        bottom: 10,
+        top: 8,
+      ),
+      child: Text(
+        title.toUpperCase(),
+        style: GoogleFonts.poppins(
+          fontSize: 12,
+          letterSpacing: 1,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey.shade500,
+        ),
+      ),
+    );
+  }
+
+  Widget _drawerTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 14,
+            ),
+            child: Row(
               children: [
-                drawerItem(
-                  icon: Icons.person,
-                  title: "Profile",
-                  color: Colors.deepPurple,
-                  onTap: () => Get.to(const ProfileScreen()),
-                ),
-                drawerItem(
-                  icon: Icons.airplane_ticket,
-                  title: "My Bookings",
-                  color: Colors.orange,
-                  onTap: () => Get.to(BookingHistoryScreen()),
-                ),
-                drawerItem(
-                  icon: Icons.favorite,
-                  title: "Wishlist",
-                  color: Colors.red,
-                  onTap: () => Get.to(MyFavScreen()),
+                Container(
+                  height: 42,
+                  width: 42,
+                  decoration: BoxDecoration(
+                    color: AppTheme.appThemeColor.withOpacity(.10),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: AppTheme.appThemeColor,
+                    size: 22,
+                  ),
                 ),
 
-                const Padding(
-                  padding: EdgeInsets.only(left: 15, top: 10),
+                const SizedBox(width: 14),
+
+                Expanded(
                   child: Text(
-                    "More",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
 
-                drawerItem(
-                  icon: Icons.help_outline,
-                  title: "Help & Support",
-                  color: Colors.blueGrey,
-                  onTap: () {
-                    Get.to(ContactUsScreen());
-                  },
-                ),
-                drawerItem(
-                  icon: Icons.privacy_tip,
-                  title: "Privacy Policy",
-                  color: Colors.blueGrey,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => WebViewScreen(
-                        url: "https://eliorbooking.com/privacy_mobile",
-                        title: "Privacy Policy",
-                      ),
-                    ),
-                  ),
-                ),
-
-                drawerItem(
-                  icon: Icons.list_alt,
-                  title: "Terms & Conditions",
-                  color: Colors.blueGrey,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => WebViewScreen(
-                        url: "https://eliorbooking.com/terms_condition_mobile",
-                        title: "Terms & Conditions",
-                      ),
-                    ),
-                  ),
-                ),
-
-                drawerItem(
-                  icon: Icons.home_work,
-                  title: "List Your Property",
-                  color: Colors.blueGrey,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => WebViewScreen(
-                        url: "https://eliorbooking.com/list_property_mobile",
-                        title: "List Your Property",
-                      ),
-                    ),
-                  ),
-                ),
-                drawerItem(
-                  icon: Icons.info_outline,
-                  title: "About App",
-                  color: Colors.blueGrey,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => WebViewScreen(
-                        url: "https://eliorbooking.com/about_app_mobile",
-                        title: "About App",
-                      ),
-                    ),
-                  ),
-                ),
-
-                // drawerItem(
-                //   icon: Icons.info_outline,
-                //   title: "About App",
-                //   color: Colors.blueGrey,
-                //   onTap: () =>
-                //       _openLink("https://eliorbooking.com/about_app_mobile"),
-                // ),
-                drawerItem(
-                  icon: Icons.logout,
-                  title: "Logout",
-                  color: Colors.redAccent,
-                  onTap: () {
-                    LocalStorages().removeToken();
-                    LocalStorages().clearAll();
-
-                    Get.offAll(LoginScreen());
-                    Get.snackbar(
-                      "Logged Out",
-                      "You have successfully logged out.",
-                    );
-                  },
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: Colors.grey.shade400,
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget drawerItem({
-    required IconData icon,
-    required String title,
-    required Color color,
-    VoidCallback? onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: color, size: 26),
-      title: Text(
-        title,
-        style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500),
-      ),
-      onTap: onTap,
-    );
-  }
+  Widget _logoutButton() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: ElevatedButton.icon(
+          icon: const Icon(Icons.logout),
+          label: Text(
+            "Logout",
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red.shade50,
+            foregroundColor: Colors.red,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          onPressed: () {
+            LocalStorages().removeToken();
+            LocalStorages().clearAll();
 
-  Future<void> _openLink(String urlString) async {
-    final url = Uri.parse(urlString);
-    await launchUrl(
-      url,
-      mode: LaunchMode.inAppWebView,
-      webViewConfiguration: const WebViewConfiguration(enableJavaScript: true),
+            Get.offAll(LoginScreen());
+
+            Get.snackbar(
+              "Logged Out",
+              "You have successfully logged out.",
+              snackPosition: SnackPosition.BOTTOM,
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -876,32 +954,26 @@ class AppDrawer extends StatelessWidget {
     if (imagePath == null || imagePath.isEmpty) {
       return Image.asset(
         "assets/images/default_user.png",
-        width: 80,
-        height: 80,
         fit: BoxFit.cover,
       );
     }
 
-    // LOCAL FILE CHECK
     if (File(imagePath).existsSync()) {
       return Image.file(
         File(imagePath),
-        width: 80,
-        height: 80,
         fit: BoxFit.cover,
       );
     }
 
-    // NETWORK URL CHECK
     if (imagePath.startsWith("http")) {
-      return Image.network(imagePath, width: 80, height: 80, fit: BoxFit.cover);
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+      );
     }
 
-    // FALLBACK
     return Image.asset(
       "assets/images/default_user.png",
-      width: 80,
-      height: 80,
       fit: BoxFit.cover,
     );
   }

@@ -1,3 +1,4 @@
+import 'package:elior/response_model/get_all_coupons_response.dart';
 import 'package:elior/response_model/nearby_properties_response.dart';
 import 'package:elior/response_model/top_hotel_model.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,11 +9,14 @@ import '../../network/service_provider.dart';
 class TopHotelController extends GetxController {
   TopHotelModel topHotelModel = TopHotelModel();
   NearbyPropertiesResponse nearbyProperties = NearbyPropertiesResponse();
+  CouponResponse couponResponse = CouponResponse();
 
   @override
   void onInit() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // fetchHotels();
+      fetchNearby();
+      fetchAllCoupons();
     });
     super.onInit();
   }
@@ -34,4 +38,14 @@ class TopHotelController extends GetxController {
       debugPrint('Statelistdata error: $e');
     }
   }
+
+  Future<void> fetchAllCoupons() async {
+    try {
+      couponResponse = await ServiceProvider().fetchAllCoupons();
+    } catch (e) {
+      debugPrint('Statelistdata error: $e');
+    }
+  }
+
+
 }

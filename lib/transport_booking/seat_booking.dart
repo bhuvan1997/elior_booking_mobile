@@ -17,7 +17,6 @@ class BusSeatScreen extends StatefulWidget {
   });
 
   final int busId;
-
   final int busRouteId;
   final String origin;
   final String destination;
@@ -28,41 +27,42 @@ class BusSeatScreen extends StatefulWidget {
 
 class _BusSeatScreenState extends State<BusSeatScreen>
     with TickerProviderStateMixin {
-  BusSeatModel? _busSeatModel;
+  BusSeatLayoutResponse? _busSeatLayoutResponse;
 
-  // bool _loading = true;
-  final List<Seats> _selectedSeats = [];
+  final List<SeatModel> _selectedSeats = [];
 
   @override
   void initState() {
     super.initState();
+    print("INIT STATE CALLED");
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      print("POST FRAME CALLBACK");
       await loadSeats();
     });
   }
 
   Future<void> loadSeats() async {
+    print("LOAD SEATS STARTED");
     try {
       final data = await ServiceProvider().busSeatApi(
         busId: widget.busId,
         busRouteId: widget.busRouteId,
       );
+
+      print("STATUS => ${data.status}");
+      print("SEATS => ${data.data?.seats?.length}");
       setState(() {
-        _busSeatModel = data;
-        // _loading = false;
+        _busSeatLayoutResponse = data;
       });
     } catch (e) {
-      // setState(() => _loading = false);
+      print("Error loading seats: $e");
+      // Handle error appropriately
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final seats = _busSeatModel?.data?.seats ?? [];
-
-    // if (_loading) {
-    //   return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    // }
+    final seats = _busSeatLayoutResponse?.data?.seats ?? [];
 
     if (seats.isEmpty) {
       return const Scaffold(
@@ -226,7 +226,10 @@ class _BusSeatScreenState extends State<BusSeatScreen>
                       child: SingleChildScrollView(
                         controller: scrollController,
                         physics: const BouncingScrollPhysics(),
-                        child: BusDetailsBottomSheet(busId: widget.busId,busRouteId: widget.busRouteId,),
+                        child: BusDetailsBottomSheet(
+                          busId: widget.busId,
+                          busRouteId: widget.busRouteId,
+                        ),
                       ),
                     ),
                   ],
@@ -238,15 +241,14 @@ class _BusSeatScreenState extends State<BusSeatScreen>
       ),
       floatingActionButton: !_selectedSeats.isNotEmpty
           ? FloatingActionButton(
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              onPressed: () {
-                // example action
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text("FAB clicked")));
-              },
-            )
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        onPressed: () {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("FAB clicked")));
+        },
+      )
           : null,
       bottomNavigationBar: _selectedSeats.isNotEmpty ? buildBottomBar() : null,
     );
@@ -269,14 +271,10 @@ class _BusSeatScreenState extends State<BusSeatScreen>
     );
   }
 
-  // ----------------- buildSeatLayout (replace existing implementation) -----------------
-  Widget buildSeatLayout(List<Seats> seats) {
-    final int maxRow = seats
-        .map((s) => s.row ?? 0)
-        .fold(0, (a, b) => a > b ? a : b);
-    final int maxCol = seats
-        .map((s) => s.col ?? 0)
-        .fold(0, (a, b) => a > b ? a : b);
+  // ----------------- buildSeatLayout (updated for SeatModel) -----------------
+  Widget buildSeatLayout(List<SeatModel> seats) {
+    final int maxRow = seats.maxRow;
+    final int maxCol = seats.maxCol;
 
     const double baseSeatBox = 55.0;
     final double seatBox = baseSeatBox;
@@ -309,8 +307,8 @@ class _BusSeatScreenState extends State<BusSeatScreen>
             final int col = (index % (maxCol > 0 ? maxCol : 1)) + 1;
 
             final seat = seats.firstWhere(
-              (s) => s.row == row && s.col == col,
-              orElse: () => Seats(),
+                  (s) => s.row == row && s.col == col,
+              orElse: () => SeatModel(), // Use SeatModel instead of Seats
             );
 
             if (seat.seatNo == null || (seat.seatNo?.isEmpty ?? true)) {
@@ -335,19 +333,19 @@ class _BusSeatScreenState extends State<BusSeatScreen>
               onTap: isBooked
                   ? null
                   : () {
-                      setState(() {
-                        if (isSelected) {
-                          _selectedSeats.remove(seat);
-                        } else {
-                          _selectedSeats.add(seat);
-                        }
-                      });
-                    },
+                setState(() {
+                  if (isSelected) {
+                    _selectedSeats.remove(seat);
+                  } else {
+                    _selectedSeats.add(seat);
+                  }
+                });
+              },
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (isSleeper)
-                    // 🛏 Sleeper layout
+                  // 🛏 Sleeper layout
                     Container(
                       height: 50,
                       width: 25,
@@ -361,7 +359,7 @@ class _BusSeatScreenState extends State<BusSeatScreen>
                       ),
                     )
                   else
-                    // 💺 Regular seat
+                  // 💺 Regular seat
                     Image.asset(AssetsScreen.seats, height: 30, color: color),
                   const SizedBox(height: 1),
                   Text(
@@ -384,12 +382,12 @@ class _BusSeatScreenState extends State<BusSeatScreen>
   }
 
   Widget buildBottomBar() {
+    final fare = _busSeatLayoutResponse?.data?.fare ?? 0;
     double total = _selectedSeats.fold(
       0.0,
-      (sum, seat) =>
-          sum +
-          ((double.tryParse(_busSeatModel?.data?.fare ?? '0') ?? 0) +
-              (seat.extraFare?.toDouble() ?? 0.0)),
+          (sum, seat) =>
+      sum +
+          (fare.toDouble() + (seat.extraFare?.toDouble() ?? 0.0)),
     );
     String seatNumbers = _selectedSeats
         .map((s) => s.seatNo ?? '')
@@ -426,7 +424,7 @@ class _BusSeatScreenState extends State<BusSeatScreen>
                   border: Border.all(color: Colors.transparent),
                 ),
                 child: Text(
-                  "Pay ${_busSeatModel?.data?.currency ?? ""} ${total.toStringAsFixed(2)}",
+                  "Pay ${_busSeatLayoutResponse?.data?.currency ?? ""} ${total.toStringAsFixed(2)}",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black,

@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/auth/login_screen.dart';
 import 'package:elior/profile_screen/edit_profile.dart';
 import 'package:elior/utils/storage.dart';
+import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -14,115 +17,247 @@ class ProfileScreen extends StatelessWidget {
     final email = LocalStorages().getEmail() ?? "user@example.com";
     final phone = LocalStorages().getMobile() ?? "+1 234 567 890";
     final image = LocalStorages().getProfileImage();
-    final address = LocalStorages().getAddress()??"Address";
-    final date = LocalStorages().getDob()??"DOB";
+    final address = LocalStorages().getAddress() ?? "Address";
+    final date = LocalStorages().getDob() ?? "DOB";
 
     return Scaffold(
-      backgroundColor: Colors.white,
-
-      // ---------------- APPBAR WITH EDIT BUTTON ----------------
-      appBar: AppBar(
-        title: const Text(
-          "Profile",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 26,
-            color: Colors.black,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
+      appBar: getAppBar(
+        context,
+        "Profile",
         centerTitle: false,
-        automaticallyImplyLeading: true,
-
-        actions: [
-          TextButton(
-            onPressed: () => Get.to(() => EditProfileScreen()),
-            child: const Text(
-              "Edit",
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+        trailing: [
+          GestureDetector(
+            onTap: () => Get.to(() => EditProfileScreen()),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14),
+              child: Text(
+                "Edit",
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.appThemeColor,
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 6),
         ],
       ),
+
 
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 40),
+            _buildProfileHeader(),
 
-            // ---------------- PROFILE IMAGE ----------------
-            CircleAvatar(
-              radius: 55,
-              backgroundColor: Colors.grey.shade200,
-              child: ClipOval(
-                child: _buildProfileImage(),
-              ),
-            ),
+            _buildInfoCard(),
 
+            _buildLogoutCard(),
 
-            const SizedBox(height: 40),
-
-            // ---------------- PROFILE DATA ----------------
-            _profileRow("Name", name),
-            _divider(),
-
-            _profileRow("Email", email),
-            _divider(),
-
-            _profileRow("Contact Number", phone),
-            _divider(),
-
-            _profileRow("Address", address),
-            _divider(),
-
-            _profileRow("Date of Birth", date),
-
-            const SizedBox(height: 40),
-
-            // ---------------- LOGOUT ----------------
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    LocalStorages().removeToken();
-                    Get.offAll(() => LoginScreen());
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    "Logout",
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
 
             Text(
               "Version 1.0.0 • ${Platform.isAndroid ? "Android" : "iOS"}",
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildProfileHeader() {
+    return Column(
+      children: [
+        Container(
+          height: 100,
+          width: 100,
+          padding: const EdgeInsets.all(3),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+          ),
+          child: ClipOval(
+            child: _buildProfileImage(),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        Text(
+          LocalStorages().getName() ?? "Guest User",
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.black,
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        Text(
+          LocalStorages().getEmail() ?? "",
+          style: GoogleFonts.poppins(
+            color: AppTheme.black.withValues(alpha: 0.5),
+            fontSize: 14,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _infoTile(
+            Icons.person_outline,
+            "Name",
+            LocalStorages().getName() ?? "",
+          ),
+
+          _divider(),
+
+          _infoTile(
+            Icons.email_outlined,
+            "Email",
+            LocalStorages().getEmail() ?? "",
+          ),
+
+          _divider(),
+
+          _infoTile(
+            Icons.phone_outlined,
+            "Mobile",
+            LocalStorages().getMobile() ?? "",
+          ),
+
+          _divider(),
+
+          _infoTile(
+            Icons.location_on_outlined,
+            "Address",
+            LocalStorages().getAddress() ?? "",
+          ),
+
+          _divider(),
+
+          _infoTile(
+            Icons.cake_outlined,
+            "Date of Birth",
+            LocalStorages().getDob() ?? "",
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoTile(
+      IconData icon,
+      String title,
+      String value,
+      ) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            height: 42,
+            width: 42,
+            decoration: BoxDecoration(
+              color: AppTheme.appThemeColor.withOpacity(.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: AppTheme.appThemeColor,
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value.isEmpty ? "Not Added" : value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLogoutCard() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: Material(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            LocalStorages().removeToken();
+            LocalStorages().clearAll();
+            Get.offAll(() => LoginScreen());
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.logout,
+                  color: Colors.red.shade700,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  "Logout",
+                  style: GoogleFonts.poppins(
+                    color: Colors.red.shade700,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildProfileImage() {
     final imagePath = LocalStorages().getProfileImage();
 
@@ -159,37 +294,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // ------------------- ROW WIDGET -------------------
-  Widget _profileRow(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ------------------- DIVIDER -------------------
   Widget _divider() {
     return Container(
       height: 1,

@@ -59,6 +59,7 @@ class _MyAppState extends State<MyApp> {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       translations: AppTranslations(),
+      scrollBehavior: NoGlowBehavior(),
       theme: MyThemes.lightTheme,
       // ✅ use GetX translations
       locale: _locale,
@@ -67,5 +68,13 @@ class _MyAppState extends State<MyApp> {
 
       // home: const ProfileScreen(),
     );
+  }
+}
+
+
+class NoGlowBehavior extends ScrollBehavior {
+  @override
+  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) {
+    return child;
   }
 }

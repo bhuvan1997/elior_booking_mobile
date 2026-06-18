@@ -29,7 +29,7 @@ class Data {
   String? busModel;
   String? busType;
   String? currency;
-  String? fare;
+  dynamic fare;
   BusBookHighlight? busBookHighlight;
   BusRoute? busRoute;
   BoardingPoint? boardingPoint;

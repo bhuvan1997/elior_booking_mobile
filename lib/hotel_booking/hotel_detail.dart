@@ -104,7 +104,7 @@ class _UnifiedPropertyDetailsScreenState
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           String langCode = Get.locale?.languageCode ?? "en";
           await HomestayTranslator.translateHomestays(result.data!, langCode);
-          setState(() {});
+          if (mounted) setState(() {});
         });
       }
     } catch (e) {

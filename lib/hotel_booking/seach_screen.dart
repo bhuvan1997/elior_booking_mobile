@@ -66,6 +66,7 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
     _initializeDates();
     _initializeFilteredHotels();
     _translateHotels();
+    _initializeFavoritesFromResponse();
   }
 
   void _initializeControllers() {
@@ -139,6 +140,9 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
         filteredHotels = result.data!;
         model.data = result.data;
         searchHotelModel.data = result.data;
+
+        // Update favorites from the new data
+        _updateFavoritesFromData(result.data!);
         await _translateHotels();
       } else {
         filteredHotels = [];
@@ -264,10 +268,12 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
         pricing: pricing,
       );
 
-      // FIX: Convert Datams to Property
       if (result.data?.isNotEmpty == true) {
         filteredHotels = result.data!.map((datams) => Property.fromDatam(datams)).toList();
         searchHotelModel.data = filteredHotels;
+
+        // Update favorites
+        _updateFavoritesFromData(filteredHotels);
         await _translateHotels();
       } else {
         filteredHotels = [];
@@ -293,9 +299,11 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       );
 
       if (result.data?.isNotEmpty == true) {
-        // If result.data is List<DataSort>, convert to Property
         filteredHotels = result.data!.map((d) => Property.fromDataSort(d)).toList();
         searchHotelModel.data = filteredHotels;
+
+        // Update favorites
+        _updateFavoritesFromData(filteredHotels);
         await _translateHotels();
       } else {
         filteredHotels = [];
@@ -310,9 +318,35 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
     }
   }
 
-  Future<void> _toggleFavorite(int id) async {
+
+  void _initializeFavoritesFromResponse() {
+    // Initialize favorites from the response data
     setState(() {
-      if (favoriteIds.contains(id)) {
+      favoriteIds = model.data
+          ?.where((property) => property.isFavourite == 1)
+          .map((property) => property.id ?? 0)
+          .toSet() ?? {};
+    });
+  }
+
+  void _updateFavoritesFromData(List<Property> properties) {
+    setState(() {
+      favoriteIds = properties
+          .where((property) => property.isFavourite == 1)
+          .map((property) => property.id ?? 0)
+          .toSet();
+    });
+  }
+
+  Future<void> _toggleFavorite(int id) async {
+    // Find the property in the list
+    final property = filteredHotels.firstWhere((p) => p.id == id);
+    final wasFavorite = property.isFavourite == 1;
+
+    // Optimistic update
+    setState(() {
+      property.isFavourite = wasFavorite ? 0 : 1;
+      if (wasFavorite) {
         favoriteIds.remove(id);
       } else {
         favoriteIds.add(id);
@@ -320,20 +354,23 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
     });
 
     try {
-      if (favoriteIds.contains(id)) {
+      if (!wasFavorite) {
         await ServiceProvider().selectFavProperty(propertyId: id);
       } else {
         await ServiceProvider().removeFavProperty(propertyId: id);
       }
     } catch (e) {
-      debugPrint("Favorite error: $e");
+      // Revert on error
       setState(() {
-        if (favoriteIds.contains(id)) {
-          favoriteIds.remove(id);
-        } else {
+        property.isFavourite = wasFavorite ? 1 : 0;
+        if (wasFavorite) {
           favoriteIds.add(id);
+        } else {
+          favoriteIds.remove(id);
         }
       });
+      _showSnackBar("Error", "Failed to update favorite");
+      debugPrint("Favorite error: $e");
     }
   }
 
@@ -549,7 +586,7 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
         final hotel = filteredHotels[index];
         return HotelCard(
           data: hotel, // This needs to accept Property, not Data
-          isFavorite: favoriteIds.contains(hotel.id ?? 0),
+          isFavorite: hotel.isFavourite == 1,
           onTap: () => _navigateToHotelDetail(hotel),
           onFavoriteToggle: () => _toggleFavorite(hotel.id ?? 0),
         );
