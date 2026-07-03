@@ -1,5 +1,6 @@
 import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebViewScreen extends StatefulWidget {
@@ -30,7 +31,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: getAppBar(context, widget.title, centerTitle: false),
+      appBar: getAppBar(context, widget.title.tr, centerTitle: false),
       body: WebViewWidget(controller: controller),
     );
   }

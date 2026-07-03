@@ -21,7 +21,6 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: GetBuilder(
         init: controller,
         builder: (value) => SafeArea(
@@ -42,7 +41,7 @@ class LoginScreen extends StatelessWidget {
                             Image.asset(AssetsScreen.elior, width: 200,),
                             const SizedBox(height: 10),
                             Text(
-                              "logintoyouraccount".tr,
+                              "login_to_your_account".tr,
                               style: TextStyle(
                                 color: AppTheme.black,
                                 fontSize: 20,
@@ -54,12 +53,26 @@ class LoginScreen extends StatelessWidget {
                       const SizedBox(height: 40),
 
                       // Email Field
-                      AppTextField(label: "Email", placeholder: "Enter email address", controller: controller.emailInput, keyboardType: TextInputType.emailAddress, prefixIcon: const Icon(Icons.email, color: AppTheme.appThemeColor,),),
+                      AppTextField(
+                        label: "email".tr,
+                        placeholder: "enter_email_address".tr,
+                        controller: controller.emailInput,
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: const Icon(Icons.email, color: AppTheme.appThemeColor,),
+                      ),
 
                       const SizedBox(height: 20),
 
-                      AppTextField(label: "Password", placeholder: "Enter your password", controller: controller.passwordInput, isPassword: true, keyboardType: TextInputType.emailAddress, prefixIcon: const Icon(Icons.lock, color: AppTheme.appThemeColor,),),
                       // Password Field
+                      AppTextField(
+                        label: "password".tr,
+                        placeholder: "enter_your_password".tr,
+                        controller: controller.passwordInput,
+                        isPassword: true,
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: const Icon(Icons.lock, color: AppTheme.appThemeColor,),
+                      ),
+
                       const SizedBox(height: 10),
 
                       // Forgot Password
@@ -69,7 +82,12 @@ class LoginScreen extends StatelessWidget {
                           onPressed: () {
                             Get.to(() => (ForgetPasswordScreen()));
                           },
-                          child: Text('forgotPassword'.tr, style: GoogleFonts.poppins(color: AppTheme.black.withValues(alpha: 0.75)),),
+                          child: Text(
+                            'forgot_password'.tr,
+                            style: GoogleFonts.poppins(
+                              color: AppTheme.black.withValues(alpha: 0.75),
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -78,7 +96,7 @@ class LoginScreen extends StatelessWidget {
                 ),
                 // Login Button
                 AppButton(
-                  title: "Login",
+                  title: "login".tr,
                   onTap: () {
                     controller.loginApi().whenComplete(() {
                       if (controller.loginModel.status == true) {
@@ -132,13 +150,13 @@ class LoginScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("donthaveanAccount".tr),
+                    Text("dont_have_an_account".tr),
                     GestureDetector(
                       onTap: () {
                         Get.to(() => SignupScreen());
                       },
                       child: Text(
-                        'Sign Up',
+                        'sign_up'.tr,
                         style: GoogleFonts.poppins(
                           color: AppTheme.appThemeColor,
                           fontWeight: FontWeight.bold,

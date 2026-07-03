@@ -9,7 +9,8 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final bool showActivity;
+  const ProfileScreen({super.key, this.showActivity = true});
 
   @override
   Widget build(BuildContext context) {
@@ -24,14 +25,15 @@ class ProfileScreen extends StatelessWidget {
       appBar: getAppBar(
         context,
         "Profile",
-        centerTitle: false,
+        centerTitle: !showActivity,
+        isLeading: showActivity,
         trailing: [
           GestureDetector(
             onTap: () => Get.to(() => EditProfileScreen()),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14),
               child: Text(
-                "Edit",
+                "edit".tr,
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -89,7 +91,7 @@ class ProfileScreen extends StatelessWidget {
         const SizedBox(height: 16),
 
         Text(
-          LocalStorages().getName() ?? "Guest User",
+          LocalStorages().getName() ?? "guestUser".tr,
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -130,7 +132,7 @@ class ProfileScreen extends StatelessWidget {
         children: [
           _infoTile(
             Icons.person_outline,
-            "Name",
+            "name".tr,
             LocalStorages().getName() ?? "",
           ),
 
@@ -138,7 +140,7 @@ class ProfileScreen extends StatelessWidget {
 
           _infoTile(
             Icons.email_outlined,
-            "Email",
+            "email".tr,
             LocalStorages().getEmail() ?? "",
           ),
 
@@ -146,7 +148,7 @@ class ProfileScreen extends StatelessWidget {
 
           _infoTile(
             Icons.phone_outlined,
-            "Mobile",
+            "mobile".tr,
             LocalStorages().getMobile() ?? "",
           ),
 
@@ -154,7 +156,7 @@ class ProfileScreen extends StatelessWidget {
 
           _infoTile(
             Icons.location_on_outlined,
-            "Address",
+            "address".tr,
             LocalStorages().getAddress() ?? "",
           ),
 
@@ -162,7 +164,7 @@ class ProfileScreen extends StatelessWidget {
 
           _infoTile(
             Icons.cake_outlined,
-            "Date of Birth",
+            "dateOfBirth".tr,
             LocalStorages().getDob() ?? "",
           ),
         ],
@@ -207,7 +209,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  value.isEmpty ? "Not Added" : value,
+                  value.isEmpty ? "notAdded".tr : value,
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -244,7 +246,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  "Logout",
+                  "logout".tr,
                   style: GoogleFonts.poppins(
                     color: Colors.red.shade700,
                     fontWeight: FontWeight.w600,

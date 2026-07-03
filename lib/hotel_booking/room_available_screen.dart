@@ -89,11 +89,11 @@ class _RoomListScreenState extends State<RoomListScreen> {
   }
 
   void _showBookingDialog(
-    BuildContext context,
-    String roomType,
-    List<String> images,
-    int availableRooms,
-  ) {
+      BuildContext context,
+      String roomType,
+      List<String> images,
+      int availableRooms,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -110,7 +110,10 @@ class _RoomListScreenState extends State<RoomListScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text("Book $roomType", style: const TextStyle(fontSize: 20)),
+                  Text(
+                    "${"book".tr} $roomType",
+                    style: const TextStyle(fontSize: 20),
+                  ),
                   const SizedBox(height: 12),
                   if (images.isNotEmpty)
                     Image.network(images.first, height: 150, fit: BoxFit.cover),
@@ -122,7 +125,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
                     children: [
                       Column(
                         children: [
-                          const Text("Add Rooms"),
+                          Text("add_rooms".tr),
                           Row(
                             children: [
                               IconButton(
@@ -156,7 +159,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
                       ),
                       Column(
                         children: [
-                          const Text("Add Guests"),
+                          Text("add_guests".tr),
                           Row(
                             children: [
                               IconButton(
@@ -190,7 +193,9 @@ class _RoomListScreenState extends State<RoomListScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(" Available Rooms: $availableRooms".tr),
+                  Text(
+                    "${"available_rooms_count".tr}: $availableRooms",
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
@@ -205,23 +210,18 @@ class _RoomListScreenState extends State<RoomListScreen> {
                         if (roomBookingModel.status == true) {
                           var hotelBooking = roomBookingModel.data;
                           LocalStorages().saveRoomType(RoomTyp: roomType);
-                          Get.off(
-                            () => ReviewBookingScreen(),
-                            arguments: hotelBooking,
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                "Booked $selectedCount x $roomType for $selectPersonCount guests ✅",
-                              ),
-                            ),
-                          );
+                          if (hotelBooking != null) {
+                            Get.off(
+                                  () => const ReviewBookingScreen(),
+                              arguments: hotelBooking.toBookingData(),
+                            );
+                          }
                         }
                       });
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange, // 🔹 Blue background
-                      foregroundColor: Colors.white, // Optional: text color
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         vertical: 14,
                         horizontal: 24,
@@ -234,9 +234,9 @@ class _RoomListScreenState extends State<RoomListScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      "Confirm",
-                      style: TextStyle(color: Colors.white),
+                    child: Text(
+                      "confirm".tr,
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -258,195 +258,198 @@ class _RoomListScreenState extends State<RoomListScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.orange))
           : (roomAvailableModel!.data == null ||
-                roomAvailableModel!.data!.isEmpty)
+          roomAvailableModel!.data!.isEmpty)
           ? Center(
-              child: Text(
-                "Rooms not Available".tr,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            )
+        child: Text(
+          "room_not_available".tr,
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      )
           : ListView.builder(
-              itemCount: roomAvailableModel!.data!.length,
-              padding: const EdgeInsets.all(12),
-              itemBuilder: (context, index) {
-                var room = roomAvailableModel!.data![index];
-                int totalRooms = room.roomsId?.length ?? 0;
-                int availableRooms = room.availableRoomId?.length ?? 0;
+        itemCount: roomAvailableModel!.data!.length,
+        padding: const EdgeInsets.all(12),
+        itemBuilder: (context, index) {
+          var room = roomAvailableModel!.data![index];
+          int totalRooms = room.roomsId?.length ?? 0;
+          int availableRooms = room.availableRoomId?.length ?? 0;
 
-                return Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: Colors.white,
-                    border: Border.all(
-                      color: AppTheme.black.withValues(alpha: 0.1),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.black.withValues(alpha: 0.1),
-                        offset: const Offset(1, 2),
-                        blurRadius: 90,
-                        spreadRadius: 4,
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        room.translatedRoomType ?? "Room",
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      if (room.roomImages != null &&
-                          room.roomImages!.isNotEmpty)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: CarouselSlider(
-                            options: CarouselOptions(
-                              height: 180,
-                              viewportFraction: 1,
-                              enableInfiniteScroll: true,
-                              autoPlay: true,
-                            ),
-                            items: room.roomImages!.map((img) {
-                              return Image.network(
-                                img,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                              );
-                            }).toList(),
-                          ),
-                        ),
-
-                      const SizedBox(height: 12),
-
-                      Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                        margin: const EdgeInsets.only(right: 20),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Room Name
-                              Text("Description:  ${room.description ?? ""}"),
-                              SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.bed,
-                                    size: 18,
-                                    color: Colors.black,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "${room.bedType}".tr,
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-
-                              // Capacity
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.person,
-                                    size: 18,
-                                    color: Colors.black,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "${room.capacity ?? 0} Adults",
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.meeting_room,
-                                    size: 18,
-                                    color: Colors.black,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "${room.roomSize ?? ""} ",
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        "Available: $availableRooms / $totalRooms rooms",
-                        style: TextStyle(
-                          color: availableRooms > 0
-                              ? Colors.orange
-                              : Colors.red,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Text(
-                            " ${room.currency} ${room.pricePerNight} + ",
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            "${room.currency} ${room.tax} Taxes & fees per night",
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      const SizedBox(height: 12),
-                      AppButton(
-                        title: availableRooms > 0 ? "Book Now" : "Sold Out",
-                        onTap: availableRooms > 0
-                            ? () => _showBookingDialog(
-                                context,
-                                room.translatedRoomType ?? "Room",
-                                room.roomImages ?? [],
-                                availableRooms,
-                              )
-                            : null,
-                      ),
-                    ],
-                  ),
-                );
-              },
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: Colors.white,
+              border: Border.all(
+                color: AppTheme.black.withValues(alpha: 0.1),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.black.withValues(alpha: 0.1),
+                  offset: const Offset(1, 2),
+                  blurRadius: 90,
+                  spreadRadius: 4,
+                ),
+              ],
             ),
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  room.translatedRoomType ?? "room".tr,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                if (room.roomImages != null &&
+                    room.roomImages!.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CarouselSlider(
+                      options: CarouselOptions(
+                        height: 180,
+                        viewportFraction: 1,
+                        enableInfiniteScroll: true,
+                        autoPlay: true,
+                      ),
+                      items: room.roomImages!.map((img) {
+                        return Image.network(
+                          img,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                const SizedBox(height: 12),
+
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                  margin: const EdgeInsets.only(right: 20),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${"description_label".tr}: ${room.description ?? ""}",
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.bed,
+                              size: 18,
+                              color: Colors.black,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "${room.bedType}",
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Capacity
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.person,
+                              size: 18,
+                              color: Colors.black,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "${room.capacity ?? 0} ${"adults".tr}",
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.meeting_room,
+                              size: 18,
+                              color: Colors.black,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "${room.roomSize ?? ""} ",
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  "${"available_label".tr}: $availableRooms / $totalRooms ${"rooms_label".tr}",
+                  style: TextStyle(
+                    color: availableRooms > 0
+                        ? Colors.orange
+                        : Colors.red,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Text(
+                      " ${room.currency} ${room.pricePerNight} + ",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        "${room.currency} ${room.tax} ${"taxes_fees_per_night".tr}",
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                AppButton(
+                  title: availableRooms > 0 ? "book_now".tr : "sold_out".tr,
+                  onTap: availableRooms > 0
+                      ? () => _showBookingDialog(
+                    context,
+                    room.roomType ?? "Room",
+                    room.roomImages ?? [],
+                    availableRooms,
+                  )
+                      : null,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
 class HotelTranslator {
   static Future<void> translateHotels(
-    List<Datas> hotels,
-    String langCode,
-  ) async {
+      List<Datas> hotels,
+      String langCode,
+      ) async {
     final translator = TranslationService();
 
     for (var hotel in hotels) {

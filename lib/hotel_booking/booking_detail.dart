@@ -4,12 +4,13 @@ import 'package:elior/hotel_booking/widgets/offers_card.dart';
 import 'package:elior/hotel_booking/widgets/payment_option_bottom_sheet.dart';
 import 'package:elior/hotel_booking/widgets/price_summary_card.dart';
 import 'package:elior/hotel_booking/widgets/room_infor_card.dart';
+import 'package:elior/success/success_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../app_values/app_theme.dart';
-import '../response_model/booking_data.dart'; // ← unified model
+import '../response_model/booking_data.dart';
 import '../response_model/booking_payment_detail_response.dart';
 import '../response_model/final_payment_model/final_payment_model.dart';
 import '../response_model/paysuccess_model_response.dart';
@@ -30,7 +31,6 @@ class ReviewBookingScreen extends StatefulWidget {
 }
 
 class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
-  // Get.arguments must be a BookingData (call .toBookingData() before navigating).
   final BookingData booking = Get.arguments as BookingData;
 
   BookingPaymentModel bookingPaymentModel = BookingPaymentModel();
@@ -38,14 +38,16 @@ class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
   PaymentInitiatedModel paymentInitiatedModel = PaymentInitiatedModel();
   FInalPaymentModel fInalPaymentModel = FInalPaymentModel();
 
-  int paymentOption = 1;
-  String selectedPayOption = "Pay At Hotel";
-  bool get _isPayAtHotel => paymentOption == 1;
+  int _paymentOption = 1;
+  String selectedPayOption = "pay_full_amount".tr;
+  bool get _isPayAtHotel => _paymentOption == 2;
 
   int get _propertyPaymentType {
     switch (booking.propertyType) {
-      case BookingPropertyType.hotel:        return 1;
-      case BookingPropertyType.accommodation: return 2;
+      case BookingPropertyType.hotel:
+        return 1;
+      case BookingPropertyType.accommodation:
+        return 2;
     }
   }
 
@@ -72,10 +74,11 @@ class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
   double get priceAfterDiscount => basePrice - discount;
   double get totalAmount => priceAfterDiscount + taxes;
   double get payNowAmount =>
-      paymentOption == 2 ? (totalAmount * 0.05) : totalAmount;
+      _paymentOption == 2 ? (totalAmount * 0.05) : totalAmount;
 
   Future<void> _handlePayment() async {
     final bookingResult = await _bookingService.confirmBooking(
+      isHotel: _propertyPaymentType == 1 ? true : false,
       propertyId: booking.propertyId.toString(),
       checkInDate: LocalStorages().getCheckIn() ?? "",
       checkOutDate: LocalStorages().getCheckOut() ?? "",
@@ -93,22 +96,14 @@ class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
 
     if (bookingResult.isSuccess) {
       fInalPaymentModel = bookingResult.data!;
-      await _initiatePaymentProcess();
-    } else {
-      Get.snackbar("Failed", bookingResult.error ?? "Payment failed");
-    }
-  }
-
-  Future<void> _initiatePaymentProcess() async {
-    if (paymentOption == 2) {
       await _initiatePartialPayment();
     } else {
-      await _processFullPayment();
+      Get.snackbar("failed".tr, bookingResult.error ?? "payment_failed".tr);
     }
   }
 
   Future<void> _initiatePartialPayment() async {
-    await _bookingService.initiatePayment(
+    final response = await _bookingService.initiatePayment(
       type: _propertyPaymentType,
       bookingId: fInalPaymentModel.data?.bookingId ?? 0,
     );
@@ -120,20 +115,23 @@ class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
         context: context,
         amount: payNowAmount,
         bookingModel: fInalPaymentModel,
-        onSuccess: (message) => _showSuccessDialog(message),
+        onSuccess: (message) => _showSuccessDialog(
+          message,
+          SuccessPageData(
+            id: response.data?.bookingNo ?? "",
+            bookingName: booking.propertyName ?? "",
+            bookingAddress: booking.propertyAddress ?? "",
+            checkIn: "${booking.checkinDate} ${booking.checkInTime}",
+            checkOut: "${booking.checkoutDate} ${booking.checkOutTime}, ${booking.nights} ${"nights_label".tr}",
+            room: "${booking.roomsCount} ${"rooms_count_label".tr}",
+            payment: response.data?.amount.toString() ?? "",
+          ),
+        ),
         onError: (message) => _showErrorDialog(message),
+        apikey: response.data?.publicKey ?? "",
+        sandbox: response.data?.sandbox ?? true,
       );
     }
-  }
-
-  Future<void> _processFullPayment() async {
-    _paymentService.startFullPayment(
-      context: context,
-      amount: totalAmount,
-      bookingModel: fInalPaymentModel,
-      onSuccess: (message) => _showSuccessDialog(message),
-      onError: (message) => _showErrorDialog(message),
-    );
   }
 
   void _applyCoupon(dynamic coupon) {
@@ -159,7 +157,7 @@ class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
         onOptionSelected: (option, paymentType) {
           setState(() {
             selectedPayOption = option;
-            paymentOption = paymentType;
+            _paymentOption = paymentType;
           });
         },
       ),
@@ -182,32 +180,24 @@ class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
     );
   }
 
-  void _showSuccessDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Payment Result"),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
-          ),
-        ],
-      ),
+  void _showSuccessDialog(String message, SuccessPageData data) {
+    print("Success Meri Claim Karen: $message");
+    Get.off(
+          () => SuccessPage(data: data,),
     );
   }
 
   void _showErrorDialog(String message) {
+    print("Error meri claim karen: $message");
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Payment Failed"),
+        title: Text("payment_failed_title".tr),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
+            child: Text("ok".tr),
           ),
         ],
       ),
@@ -217,7 +207,7 @@ class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: getAppBar(context, "Review Booking", centerTitle: false),
+      appBar: getAppBar(context, "review_booking".tr, centerTitle: false),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
@@ -245,9 +235,7 @@ class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
           ],
         ),
       ),
-      persistentFooterButtons: [
-        _buildPaymentFooter(),
-      ],
+      persistentFooterButtons: [_buildPaymentFooter()],
     );
   }
 
@@ -265,7 +253,7 @@ class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
                 Row(
                   children: [
                     Text(
-                      "Pay Option",
+                      "pay_option".tr,
                       style: GoogleFonts.poppins(fontSize: 14),
                     ),
                     Icon(
@@ -286,10 +274,7 @@ class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
             ),
             const SizedBox(width: 20),
             Expanded(
-              child: AppButton(
-                title: "Pay Now",
-                onTap: _handlePayment,
-              ),
+              child: AppButton(title: "pay_now".tr, onTap: _handlePayment),
             ),
           ],
         ),

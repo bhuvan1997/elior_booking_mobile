@@ -2,6 +2,7 @@ import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/response_model/notification_model.dart';
 import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../network/service_provider.dart';
 
@@ -40,23 +41,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: getAppBar(context, "My Notifications", isLeading: false),
-
-      // appBar: AppBar(
-      //   backgroundColor: const Color(0xFF0057C2),
-      //   foregroundColor: Colors.white,
-      //   title: const Text(
-      //     "Your notifications",
-      //     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-      //   ),
-      //   centerTitle: true,
-      //   elevation: 0,
-      // ),
-
+      appBar: getAppBar(context, "my_notifications".tr, isLeading: false),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : notificationModel.data == null || notificationModel.data!.isEmpty
-          ? const Center(child: Text("No Notifications Found"))
+          ? Center(child: Text("no_notifications_found".tr))
           : ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 12),
         itemCount: notificationModel.data!.length,
@@ -64,9 +53,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           final notification = notificationModel.data![index];
 
           return _notificationTile(
-            // icon:
-            // "https://eliorbooking.com/public/uploads/property/1761911755_6904a3cb19972.jpg",
-             title: notification.title ?? "",
+            title: notification.title ?? "",
             subtitle: notification.message ?? "",
             date: notification.message ?? "",
             isRead: notification.isRead ?? 0,
@@ -78,7 +65,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   // ---------------- NOTIFICATION ITEM WIDGET ----------------
   Widget _notificationTile({
-    // required String icon,
     required String title,
     required String subtitle,
     required String date,
@@ -91,17 +77,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ClipOval(
-          //   child: Image.network(
-          //     icon,
-          //     height: 55,
-          //     width: 55,
-          //     fit: BoxFit.cover,
-          //   ),
-          // ),
-
-          // const SizedBox(width: 12),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,13 +116,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 13),
                 ),
-
-                // const SizedBox(height: 6),
-
-                // Text(
-                //   date,
-                //   style: const TextStyle(fontSize: 12, color: Colors.grey),
-                // ),
               ],
             ),
           ),

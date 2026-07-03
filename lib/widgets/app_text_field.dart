@@ -26,6 +26,9 @@ class AppTextField extends StatefulWidget {
 
   final List<TextInputFormatter>? inputFormatters;
 
+  /// External validation error
+  final String? errorText;
+
   const AppTextField({
     super.key,
     this.label,
@@ -42,6 +45,7 @@ class AppTextField extends StatefulWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.inputFormatters,
+    this.errorText,
   });
 
   @override
@@ -66,6 +70,7 @@ class _AppTextFieldState extends State<AppTextField> {
           ),
           const SizedBox(height: 6),
         ],
+
         TextField(
           controller: widget.controller,
           keyboardType: widget.keyboardType,
@@ -80,6 +85,7 @@ class _AppTextFieldState extends State<AppTextField> {
           cursorColor: AppTheme.appThemeColor,
           decoration: InputDecoration(
             hintText: widget.placeholder,
+            errorText: widget.errorText,
             prefixIcon: widget.prefixIcon,
             suffixIcon: widget.isPassword
                 ? IconButton(
@@ -116,7 +122,7 @@ class _AppTextFieldState extends State<AppTextField> {
               vertical: 14,
             ),
           ),
-        )
+        ),
       ],
     );
   }

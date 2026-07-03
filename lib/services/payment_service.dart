@@ -13,23 +13,9 @@ class PaymentService {
     required FInalPaymentModel bookingModel,
     required Function(String) onSuccess,
     required Function(String) onError,
-  }) async {
-    final payAmount = (amount * 0.5).toInt();
-    _navigateToPaymentGateway(
-      context: context,
-      amount: payAmount,
-      bookingModel: bookingModel,
-      onSuccess: onSuccess,
-      onError: onError,
-    );
-  }
+    required String apikey,
+    required bool sandbox,
 
-  Future<void> startFullPayment({
-    required BuildContext context,
-    required double amount,
-    required FInalPaymentModel bookingModel,
-    required Function(String) onSuccess,
-    required Function(String) onError,
   }) async {
     _navigateToPaymentGateway(
       context: context,
@@ -37,6 +23,8 @@ class PaymentService {
       bookingModel: bookingModel,
       onSuccess: onSuccess,
       onError: onError,
+      sandbox: sandbox,
+      apikey: apikey
     );
   }
 
@@ -46,6 +34,8 @@ class PaymentService {
     required FInalPaymentModel bookingModel,
     required Function(String) onSuccess,
     required Function(String) onError,
+    required String apikey,
+    required bool sandbox,
   }) {
     final bookingNo = bookingModel.data?.bookingno ?? "";
     final bookingId = bookingModel.data?.bookingId ?? 0;
@@ -55,13 +45,10 @@ class PaymentService {
       MaterialPageRoute(
         builder: (context) => KKiaPay(
           amount: amount,
-          apikey: "197c8b4084cd11f0a0845d14785d8374",
-          sandbox: true,
-          phone: "97000000",
-          name: "John Doe",
-          email: "john.doe@gmail.com",
+          apikey: apikey,
+          sandbox: sandbox,
           reason: "Hotel Booking $bookingNo",
-          theme: "#222F5A",
+          theme: "#ff7903",
           data: jsonEncode({"order_id": bookingNo, "booking_id": bookingId}),
           callback: (response, context) {
             _handlePaymentCallback(
@@ -117,12 +104,12 @@ class PaymentService {
 
       if (response.status == true) {
         onSuccess(
-          "Payment Successful ✅\n"
+          "Payment Successful\n"
           "Booking No: $bookingNo\n"
           "Txn ID: $transactionId",
         );
       } else {
-        onError("Payment verification failed ❌");
+        onError("Payment verification failed");
       }
     } catch (e) {
       onError("Payment verification error: $e");

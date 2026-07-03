@@ -1,6 +1,7 @@
 import 'package:elior/response_model/booking_data.dart';
 import 'package:flutter/material.dart';
 import 'package:elior/app_values/app_theme.dart';
+import 'package:get/get.dart';
 
 class PriceSummaryCard extends StatelessWidget {
   final BookingData hotelBooking;
@@ -32,36 +33,36 @@ class PriceSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Price Summary",
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          Text(
+            "price_summary".tr,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           _PriceRow(
-            title: "Base Price",
+            title: "base_price".tr,
             value: "${hotelBooking.currency ?? ""} ${hotelBooking.basePrice}",
           ),
           _PriceRow(
-            title: "Total Discount",
+            title: "total_discount".tr,
             value: "${hotelBooking.currency ?? ""} ${discount.toStringAsFixed(0)}",
             color: Colors.green,
           ),
           _PriceRow(
-            title: "Price after Discount",
+            title: "price_after_discount".tr,
             value: "${hotelBooking.currency ?? ""} ${priceAfterDiscount.toStringAsFixed(0)}",
           ),
           _PriceRow(
-            title: "Taxes & Service Fees",
+            title: "taxes_service_fees".tr,
             value: "${hotelBooking.currency ?? ""} ${hotelBooking.taxPrice.toStringAsFixed(0)}",
           ),
           const Divider(color: AppTheme.black),
           _PriceRow(
-            title: "Total amount (Base Price × ${hotelBooking.nights})",
+            title: "${"total_amount".tr} (${"base_price_label".tr} × ${hotelBooking.nights})",
             value: "${hotelBooking.currency ?? ""} ${hotelBooking.totalPrice}",
           ),
           const Divider(color: AppTheme.black),
           _PriceRow(
-            title: "Pay Now",
+            title: "pay_now".tr,
             value: "${hotelBooking.currency ?? ""} ${payNowAmount.toStringAsFixed(0)}",
             isBold: true,
           ),

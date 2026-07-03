@@ -1,134 +1,172 @@
+import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/utils/storage.dart';
+import 'package:elior/widgets/app_button.dart';
+import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pinput/pinput.dart';
+
 import '../controller/auth_controller/verify_otp_controller.dart';
 import '../hotel_booking/bottom_navigation_screen.dart';
 
 class OtpScreen extends StatelessWidget {
-  var controller = Get.put(VerifyOtpController());
+  OtpScreen({super.key});
+
+  final VerifyOtpController controller = Get.put(VerifyOtpController());
+
+  void _verifyOtp() {
+    final otp = controller.otpInput.text.trim();
+
+    if (otp.isEmpty) {
+      Get.snackbar(
+        "Validation Error",
+        "Please enter OTP",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+
+    if (otp.length != 6) {
+      Get.snackbar(
+        "Validation Error",
+        "OTP must be 6 digits",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+
+    controller
+        .verifyOtpApi(
+      otp,
+      LocalStorages().getEmail() ?? "",
+    )
+        .whenComplete(() {
+      if (controller.verifyModel.status == true) {
+        LocalStorages().saveToken(
+          token: controller.verifyModel.token ?? "",
+        );
+
+        Get.offAll(() => BottomBarScreen());
+
+        Get.snackbar(
+          "Success",
+          controller.verifyModel.message ?? "OTP Verified Successfully",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+        );
+      } else {
+        Get.snackbar(
+          "Error",
+          controller.verifyModel.message ?? "Invalid OTP",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text("OTP Verification"),
-        centerTitle: true,
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
+    final defaultPinTheme = PinTheme(
+      width: 56,
+      height: 60,
+      textStyle: GoogleFonts.poppins(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
       ),
-      body: GetBuilder(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.grey.shade300,
+        ),
+      ),
+    );
+
+    return Scaffold(
+      appBar: getAppBar(
+        context,
+        "OTP Verification",
+        centerTitle: false,
+      ),
+      body: GetBuilder<VerifyOtpController>(
         init: controller,
-        builder: (value) => Stack(
-          children: [
-            Row(
-              children: [
-                Container(width: 4, color: Colors.orange),
-                Expanded(child: Container()),
-                Container(width: 4, color: Colors.green),
-              ],
-            ),
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 40,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "enter6digitcode".tr,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: 30),
+        builder: (_) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 20,
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 20),
 
-                      // OTP input field
-                      // PinCodeTextField(
-                      //   appContext: context,
-                      //   length: 6,
-                      //   controller: controller.otpInput,
-                      //   keyboardType: TextInputType.number,
-                      //   autoDismissKeyboard: true,
-                      //   pinTheme: PinTheme(
-                      //     shape: PinCodeFieldShape.box,
-                      //     borderRadius: BorderRadius.circular(10),
-                      //     fieldHeight: 50,
-                      //     fieldWidth: 45,
-                      //     activeFillColor: Colors.white,
-                      //     selectedFillColor: Colors.grey.shade200,
-                      //     inactiveFillColor: Colors.grey.shade100,
-                      //     activeColor: Colors.teal,
-                      //     selectedColor: Colors.teal,
-                      //     inactiveColor: Colors.grey,
-                      //   ),
-                      //   cursorColor: Colors.teal,
-                      //   enableActiveFill: true,
-                      //   onChanged: (value) {},
-                      // ),
-                      SizedBox(height: 40),
-
-                      // Dummy Button
-                      ElevatedButton(
-                        onPressed: () {
-                          controller
-                              .verifyOtpApi(
-                                controller.otpInput.text.trim(),
-                                LocalStorages().getEmail() ?? "",
-                              )
-                              .whenComplete(() {
-                                if (controller.verifyModel.status == true) {
-                                  LocalStorages().saveToken(
-                                    token: controller.verifyModel.token ?? "",
-                                  );
-                                  Get.to(BottomBarScreen());
-                                  Get.snackbar(
-                                    "Success",
-                                    controller.verifyModel.message ?? "",
-                                    colorText: Colors.white,
-                                    duration: const Duration(seconds: 3),
-                                    borderRadius: 20,
-                                    margin: const EdgeInsets.all(20),
-                                    backgroundColor: Colors.green,
-                                  );
-                                } else {
-                                  Get.snackbar(
-                                    "Error",
-                                    "Invalid Otp ",
-                                    colorText: Colors.white,
-                                    duration: const Duration(seconds: 3),
-                                    borderRadius: 20,
-                                    margin: const EdgeInsets.all(20),
-                                    backgroundColor: Colors.red,
-                                  );
-                                }
-                              });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          minimumSize: Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        Text(
+                          "Verify Your Account",
+                          style: GoogleFonts.poppins(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        child: Text(
-                          "Continue",
-                          style: TextStyle(fontSize: 18, color: Colors.white),
+
+                        const SizedBox(height: 8),
+
+                        Text(
+                          "Enter the 6-digit OTP sent to your registered email address.",
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                      ),
-                    ],
+
+                        const SizedBox(height: 40),
+
+                        Center(
+                          child: Pinput(
+                            controller: controller.otpInput,
+                            length: 6,
+                            keyboardType: TextInputType.number,
+                            defaultPinTheme: defaultPinTheme,
+                            focusedPinTheme: defaultPinTheme.copyDecorationWith(
+                              border: Border.all(
+                                color: AppTheme.appThemeColor,
+                                width: 2,
+                              ),
+                            ),
+                            submittedPinTheme: defaultPinTheme.copyDecorationWith(
+                              border: Border.all(
+                                color: AppTheme.appThemeColor.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  AppButton(title: "Continue", onTap: _verifyOtp,),
+                ],
+              ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

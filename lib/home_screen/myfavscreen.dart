@@ -89,7 +89,7 @@ class _MyFavScreenState extends State<MyFavScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: getAppBar(context, "Wishlist", isLeading: false),
+      appBar: getAppBar(context, "wishlist".tr, isLeading: false),
       body: _buildTripSlider(),
     );
   }
@@ -105,10 +105,10 @@ class _MyFavScreenState extends State<MyFavScreen> {
 
     if (bookingHistoryModel.data == null ||
         bookingHistoryModel.data!.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          "No Data found",
-          style: TextStyle(color: Colors.grey, fontSize: 16),
+          "no_data_found".tr,
+          style: const TextStyle(color: Colors.grey, fontSize: 16),
         ),
       );
     }
@@ -277,8 +277,8 @@ class _MyFavScreenState extends State<MyFavScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  "Check-In: ${formatTime(data.checkInTime.toString())} | "
-                      "Check-out: ${formatTime(data.checkOutTime.toString())}",
+                  "${"check_in_label".tr} ${formatTime(data.checkInTime.toString())} | "
+                      "${"check_out_label".tr} ${formatTime(data.checkOutTime.toString())}",
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -290,7 +290,7 @@ class _MyFavScreenState extends State<MyFavScreen> {
                       ),
                     ),
                     Text(
-                      "${data.pricePerNight ?? ""} /Night",
+                      "${data.pricePerNight ?? ""} ${"per_night".tr}",
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                       ),

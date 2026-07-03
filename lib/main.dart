@@ -61,7 +61,6 @@ class _MyAppState extends State<MyApp> {
       translations: AppTranslations(),
       scrollBehavior: NoGlowBehavior(),
       theme: MyThemes.lightTheme,
-      // ✅ use GetX translations
       locale: _locale,
       fallbackLocale: const Locale('en'),
       home: SplashScreen(),

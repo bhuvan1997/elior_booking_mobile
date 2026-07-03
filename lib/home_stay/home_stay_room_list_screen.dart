@@ -9,7 +9,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../network/service_provider.dart';
 import '../response_model/home_stay_respnse/accomendation_booking_screen.dart';
-// import '../response_model/home_stay_respnse/accomendation_response.dart';
 import '../response_model/home_stay_respnse/accomendation_response.dart';
 import '../utils/storage.dart';
 import 'home_pay_details_screen.dart';
@@ -35,8 +34,6 @@ class HomeStayRoomListScreen extends StatefulWidget {
 class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
   AccomendationModel? roomAvailableModel;
 
-  // bool isLoading = true;
-
   Future<void> fetchRooms(int id, String checkIn, String checkOut) async {
     try {
       final result = await ServiceProvider().homeStayRoomAvailableApi(
@@ -46,16 +43,14 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
       );
       setState(() {
         roomAvailableModel = result;
-        // isLoading = false;
       });
     } catch (e) {
       debugPrint('Error loading rooms: $e');
-      // setState(() => isLoading = false);
     }
   }
 
   AccommodationBookingModel accomendationBookingModel =
-      AccommodationBookingModel();
+  AccommodationBookingModel();
 
   Future<void> bookConfirm({
     required String id,
@@ -74,11 +69,9 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
       );
       setState(() {
         accomendationBookingModel = result;
-        // isLoading = false;
       });
     } catch (e) {
       debugPrint('Error loading rooms: $e');
-      // setState(() => isLoading = false);
     }
   }
 
@@ -102,165 +95,165 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
       appBar: getAppBar(context, widget.homeName),
       body: rooms.isEmpty == true
           ? Center(
-              child: Text(
-                "Rooms not available".tr,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            )
+        child: Text(
+          "room_not_available".tr,
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      )
           : ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: rooms.length,
-              itemBuilder: (context, index) {
-                final room = rooms[index];
-                int totalRooms = room.accomodationId?.length ?? 0;
-                int availableRooms = room.availableAccomodationId?.length ?? 0;
+        padding: const EdgeInsets.all(12),
+        itemCount: rooms.length,
+        itemBuilder: (context, index) {
+          final room = rooms[index];
+          int totalRooms = room.accomodationId?.length ?? 0;
+          int availableRooms = room.availableAccomodationId?.length ?? 0;
 
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  margin: EdgeInsets.only(bottom: 20),
-                  elevation: 6,
-                  child: Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        /// ✅ Optional Image Carousel (if your API adds images later)
-                        // if (index % 2 == 0)
-                        CarouselSlider(
-                          items: (room.images ?? [])
-                              .map(
-                                (imgUrl) => ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: Image.network(
-                                    imgUrl,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            Container(
-                                              color: Colors.grey.shade200,
-                                              child: const Center(
-                                                child: Icon(
-                                                  Icons.broken_image,
-                                                  size: 50,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                            ),
+          return Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            margin: const EdgeInsets.only(bottom: 20),
+            elevation: 6,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CarouselSlider(
+                    items: (room.images ?? [])
+                        .map(
+                          (imgUrl) => ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.network(
+                          imgUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder:
+                              (context, error, stackTrace) =>
+                              Container(
+                                color: Colors.grey.shade200,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    size: 50,
+                                    color: Colors.grey,
                                   ),
                                 ),
-                              )
-                              .toList(),
-                          options: CarouselOptions(
-                            height: 180,
-                            autoPlay: true,
-                            enlargeCenterPage: true,
-                            viewportFraction: 1.0,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              room.accomodationName ?? "Room",
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.black,
                               ),
-                            ),
-
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.green,
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              child: Text(
-                                "Available",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
                         ),
-                        const SizedBox(height: 6),
-
-                        /// ✅ Room Details
-                        Text(
-                          "• It has ${room.beds ?? 0} Beds ".tr,
-                          style: TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        Text(
-                          "• It has ${room.guest ?? 0} Guest Capacity".tr,
-                          style: TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        Text(
-                          "• It has ${room.bedroom ?? 0} Bedrooms ".tr,
-                          style: TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        Text(
-                          "• It has ${room.bathroom ?? 0} Bathrooms ".tr,
-                          style: TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(height: 6),
-
-                        /// ✅ Price per Night
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "${room.currency ?? ''} ${room.pricePerNight ?? 0} + ${room.currency ?? ''} ${room.tax} Taxes & fees per night",
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-
-                        /// ✅ Book Now Button
-                        AppButton(
-                          title: availableRooms > 0 ? "Book Now" : "Sold Out",
-                          onTap: () {
-                            _showBookingBottomSheet(
-                              context,
-                              room,
-                              room.images ?? [],
-                            );
-                          },
-                        ),
-                      ],
+                      ),
+                    )
+                        .toList(),
+                    options: CarouselOptions(
+                      height: 180,
+                      autoPlay: true,
+                      enlargeCenterPage: true,
+                      viewportFraction: 1.0,
                     ),
                   ),
-                );
-              },
+
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        room.accomodationName ?? "room".tr,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.black,
+                        ),
+                      ),
+
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Text(
+                          "available".tr,
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+
+                  /// Room Details
+                  Text(
+                    "${"has_beds".tr} ${room.beds ?? 0} ${"beds".tr} ",
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  Text(
+                    "${"has_guest_capacity".tr} ${room.guest ?? 0} ${"guests".tr}",
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  Text(
+                    "${"has_bedrooms".tr} ${room.bedroom ?? 0} ${"bedrooms".tr} ",
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  Text(
+                    "${"has_bathrooms".tr} ${room.bathroom ?? 0} ${"bathrooms".tr} ",
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 6),
+
+                  /// Price per Night
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "${room.currency ?? ''} ${room.pricePerNight ?? 0} + ${room.currency ?? ''} ${room.tax} ${"taxes_fees_per_night".tr}",
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  /// Book Now Button
+                  AppButton(
+                    title: availableRooms > 0 ? "book_now".tr : "sold_out".tr,
+                    onTap: () {
+                      _showBookingBottomSheet(
+                        context,
+                        room,
+                        room.images ?? [],
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
+          );
+        },
+      ),
     );
   }
 
-  /// ✅ Booking Bottom Sheet
+  /// Booking Bottom Sheet
   void _showBookingBottomSheet(
-    BuildContext context,
-    Data room,
-    List<String> images,
-  ) {
+      BuildContext context,
+      Data room,
+      List<String> images,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -268,7 +261,7 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        int selectedGuests = 1; // ✅ defined here
+        int selectedGuests = 1;
         int selectedRooms = 1;
 
         return StatefulBuilder(
@@ -279,7 +272,7 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "Book ${room.accomodationName ?? "Room"}",
+                    "${"book".tr} ${room.accomodationName ?? "room".tr}",
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -299,12 +292,12 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
 
                   const SizedBox(height: 20),
 
-                  /// Room count selector
+                  /// Guest count selector
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       _counterBox(
-                        title: "Guests",
+                        title: "guests".tr,
                         value: selectedGuests,
                         onAdd: () => setState(() => selectedGuests++),
                         onRemove: () {
@@ -317,7 +310,7 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
                   ),
                   const SizedBox(height: 15),
 
-                  /// ✅ Confirm Booking Button
+                  /// Confirm Booking Button
                   ElevatedButton(
                     onPressed: () async {
                       await bookConfirm(
@@ -347,9 +340,9 @@ class _HomeStayRoomListScreenState extends State<HomeStayRoomListScreen> {
                         vertical: 14,
                       ),
                     ),
-                    child: const Text(
-                      "Confirm Booking",
-                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    child: Text(
+                      "confirm_booking".tr,
+                      style: const TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 20),

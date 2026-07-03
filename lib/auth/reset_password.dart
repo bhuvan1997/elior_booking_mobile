@@ -78,9 +78,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Change Password",
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          "changePassword".tr,
+          style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.blueAccent,
         leading: IconButton(
@@ -103,14 +103,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               children: [
                 const SizedBox(height: 20),
                 _buildPasswordField(
-                  label: "New Password",
+                  label: "newPassword".tr,
                   controller: newPasswordController,
                   obscure: _obscureNew,
                   onToggle: () => setState(() => _obscureNew = !_obscureNew),
                 ),
                 const SizedBox(height: 20),
                 _buildPasswordField(
-                  label: "Confirm Password",
+                  label: "confirmPassword".tr,
                   controller: confirmPasswordController,
                   obscure: _obscureConfirm,
                   onToggle: () =>
@@ -128,9 +128,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         }
                       });
                     },
-                    child: const Text(
-                      "Save Password",
-                      style: TextStyle(color: Colors.white),
+                    child: Text(
+                      "savePassword".tr,
+                      style: const TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueAccent,

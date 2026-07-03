@@ -1,37 +1,62 @@
+import 'package:elior/widgets/country_code_picker.dart';
+import 'package:get/get.dart';
+
+class DataUtils {
+  static final List<Country> countries = [
+    Country('United States', '+1'),
+    Country('Canada', '+1'),
+    Country('Ivory Coast', '+225'),
+    Country('United Kingdom', '+44'),
+    Country('Australia', '+61'),
+    Country('Germany', '+49'),
+    Country('France', '+33'),
+    Country('Brazil', '+55'),
+  ];
+
+  static Country getCountry(String code) {
+    return countries.firstWhereOrNull((c) => c.code == "+$code") ??
+        Country(
+          'Ivory Coast',
+          '+225',
+        );
+  }
+}
+
+
 class HotelHomePageUtils {
   static String getAppBarText(String slug) {
     switch (slug) {
       case "hotel":
-        return "Search Hotels";
+        return "search_hotels".tr;
       default:
-        return "Search Homestays";
+        return "search_homestays".tr;
     }
   }
 
   static String getPageText1(String slug) {
     switch (slug) {
       case "hotel":
-        return "Find your next stay!";
+        return "find_your_next_stay".tr;
       default:
-        return "Plan your stay";
+        return "plan_your_stay_subtitle".tr;
     }
   }
 
   static String getPageText2(String slug) {
     switch (slug) {
       case "hotel":
-        return "Discover the perfect stay with Elior Booking";
+        return "discover_perfect_stay".tr;
       default:
-        return "Find homestays near you or any location";
+        return "find_homestays_near_you_subtitle".tr;
     }
   }
 
   static String getSearchText(String slug) {
     switch (slug) {
       case "hotel":
-        return "Search with Hotel or Area name";
+        return "search_hotel_or_area".tr;
       default:
-        return "Search Your Homestay";
+        return "search_your_homestay".tr;
     }
   }
 }

@@ -1,3 +1,6 @@
+import 'package:elior/app_values/app_theme.dart';
+import 'package:elior/widgets/app_button.dart';
+import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -34,9 +37,7 @@ class _BusSeatScreenState extends State<BusSeatScreen>
   @override
   void initState() {
     super.initState();
-    print("INIT STATE CALLED");
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      print("POST FRAME CALLBACK");
       await loadSeats();
     });
   }
@@ -65,8 +66,8 @@ class _BusSeatScreenState extends State<BusSeatScreen>
     final seats = _busSeatLayoutResponse?.data?.seats ?? [];
 
     if (seats.isEmpty) {
-      return const Scaffold(
-        body: Center(child: Text("No seat data available")),
+      return Scaffold(
+        body: Center(child: Text("no_seat_data_available".tr)),
       );
     }
 
@@ -78,40 +79,23 @@ class _BusSeatScreenState extends State<BusSeatScreen>
         .toList();
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Select your seats',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-                fontSize: 20,
-              ),
-            ),
-            Text(
-              "${widget.origin} → ${widget.destination}",
-              style: const TextStyle(color: Colors.grey, fontSize: 15),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
+      appBar: getAppBar(
+        context,
+        "select_your_seats".tr,
+        subtext: "${widget.origin} → ${widget.destination}",
+        isSubtext: true,
+        centerTitle: false,
       ),
       body: Stack(
         children: [
-          /// 🔹 Main seat layout
           SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Bus Layout",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                Text(
+                  "bus_layout".tr,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 const SizedBox(height: 10),
 
@@ -142,7 +126,7 @@ class _BusSeatScreenState extends State<BusSeatScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               buildDeckTitle(
-                                "Lower Berth (${lowerDeckSeats.length})",
+                                "${"lower_berth".tr} (${lowerDeckSeats.length})",
                               ),
                               const SizedBox(height: 10),
                               SingleChildScrollView(
@@ -172,7 +156,7 @@ class _BusSeatScreenState extends State<BusSeatScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               buildDeckTitle(
-                                "Upper Berth (${upperDeckSeats.length})",
+                                "${"upper_berth".tr} (${upperDeckSeats.length})",
                               ),
                               const SizedBox(height: 10),
                               SingleChildScrollView(
@@ -246,7 +230,7 @@ class _BusSeatScreenState extends State<BusSeatScreen>
         onPressed: () {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text("FAB clicked")));
+          ).showSnackBar(SnackBar(content: Text("fab_clicked".tr)));
         },
       )
           : null,
@@ -308,7 +292,7 @@ class _BusSeatScreenState extends State<BusSeatScreen>
 
             final seat = seats.firstWhere(
                   (s) => s.row == row && s.col == col,
-              orElse: () => SeatModel(), // Use SeatModel instead of Seats
+              orElse: () => SeatModel(),
             );
 
             if (seat.seatNo == null || (seat.seatNo?.isEmpty ?? true)) {
@@ -322,7 +306,7 @@ class _BusSeatScreenState extends State<BusSeatScreen>
             if (isBooked) {
               color = Colors.red.shade400;
             } else if (isSelected) {
-              color = Colors.blue.shade400;
+              color = AppTheme.appThemeColor;
             } else {
               color = Colors.green.shade400;
             }
@@ -369,7 +353,7 @@ class _BusSeatScreenState extends State<BusSeatScreen>
                       fontWeight: isSelected
                           ? FontWeight.bold
                           : FontWeight.normal,
-                      color: isSelected ? Colors.blue.shade700 : Colors.black,
+                      color: isSelected ? AppTheme.appThemeColor : Colors.black,
                     ),
                   ),
                 ],
@@ -413,7 +397,7 @@ class _BusSeatScreenState extends State<BusSeatScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "${_selectedSeats.length} Seat(s) selected",
+                "${_selectedSeats.length} ${"seats_selected".tr}",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               Container(
@@ -424,7 +408,7 @@ class _BusSeatScreenState extends State<BusSeatScreen>
                   border: Border.all(color: Colors.transparent),
                 ),
                 child: Text(
-                  "Pay ${_busSeatLayoutResponse?.data?.currency ?? ""} ${total.toStringAsFixed(2)}",
+                  "${"pay".tr} ${_busSeatLayoutResponse?.data?.currency ?? ""} ${total.toStringAsFixed(2)}",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
@@ -434,37 +418,18 @@ class _BusSeatScreenState extends State<BusSeatScreen>
             ],
           ),
           const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 20,
+          AppButton(
+            title: "select_boarding_dropping".tr,
+            onTap: () {
+              Get.to(
+                BoardingDroppingScreen(
+                  Seats: seatNumbers,
+                  seatPrice: total.toInt(),
+                  busId: widget.busId,
+                  busrouteId: widget.busRouteId,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onPressed: () {
-                Get.to(
-                  BoardingDroppingScreen(
-                    Seats: seatNumbers,
-                    seatPrice: total.toInt(),
-                    busId: widget.busId,
-                    busrouteId: widget.busRouteId,
-                  ),
-                );
-              },
-              child: const Text(
-                "Select Boarding & Dropping Point",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),

@@ -27,15 +27,13 @@ class _BusBookingScreenState extends State<BusBookingScreen> {
   ); // default tomorrow
   DateTime? checkOutDate;
 
-  BusListResponse? busListResponse; // Changed from BusRouteModel
+  BusListResponse? busListResponse;
 
-  /// ✅ Format date for API (yyyy-MM-dd)
   String formatDate(DateTime? date) {
     if (date == null) return 'yyyy-MM-dd';
     return DateFormat('yyyy-MM-dd').format(date);
   }
 
-  /// ✅ Call API
   Future busRouteApi() async {
     try {
       busListResponse = await ServiceProvider().busRouteApi(
@@ -51,7 +49,7 @@ class _BusBookingScreenState extends State<BusBookingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: getAppBar(context, "Bus Tickets", centerTitle: false),
+      appBar: getAppBar(context, "bus_tickets".tr, centerTitle: false),
       body: Stack(
         children: [
           Image(
@@ -77,13 +75,13 @@ class _BusBookingScreenState extends State<BusBookingScreen> {
                         children: [
                           _navigateToSection(
                             Icons.near_me,
-                            "From",
+                            "from".tr,
                             fromController,
                           ),
                           const SizedBox(height: 12),
                           _navigateToSection(
                             Icons.location_on,
-                            "To",
+                            "to".tr,
                             toController,
                           ),
                         ],
@@ -143,7 +141,7 @@ class _BusBookingScreenState extends State<BusBookingScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Departure",
+                              "departure".tr,
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 color: AppTheme.black.withValues(alpha: 0.5),
@@ -166,7 +164,7 @@ class _BusBookingScreenState extends State<BusBookingScreen> {
                   ),
                   const SizedBox(height: 48),
                   AppButton(
-                    title: "Search buses",
+                    title: "search_buses".tr,
                     onTap: () {
                       busRouteApi().then((_) {
                         if (busListResponse?.status == true &&
@@ -174,7 +172,6 @@ class _BusBookingScreenState extends State<BusBookingScreen> {
                           LocalStorages().saveBusDate(
                             busDate: DateFormat("MMMdd").format(selectedDate),
                           );
-                          // Pass the entire response to BusListScreen
                           Get.to(
                                 () => BusListScreen(
                               busListResponse: busListResponse!,
@@ -182,7 +179,7 @@ class _BusBookingScreenState extends State<BusBookingScreen> {
                           );
                         } else {
                           String message = busListResponse?.message ??
-                              "No buses found for this route";
+                              "no_buses_found".tr;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -194,7 +191,7 @@ class _BusBookingScreenState extends State<BusBookingScreen> {
                       }).catchError((error) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text("Error: $error"),
+                            content: Text("${"error_label".tr}: $error"),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -273,7 +270,6 @@ class _BusBookingScreenState extends State<BusBookingScreen> {
     );
   }
 
-  /// ✅ Date picker dialog
   Future<void> _selectDate(BuildContext context) async {
     final picked = await showDatePicker(
       context: context,
@@ -285,26 +281,8 @@ class _BusBookingScreenState extends State<BusBookingScreen> {
     if (picked != null) {
       setState(() {
         selectedDate = picked;
-        checkOutDate = picked; // sync both for UI + API
+        checkOutDate = picked;
       });
     }
-  }
-
-  /// ✅ Reusable textfield builder
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required IconData icon,
-    required String hint,
-  }) {
-    return TextField(
-      controller: controller,
-      style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.black54),
-        hintText: hint,
-        hintStyle: GoogleFonts.inter(color: Colors.black45),
-        border: InputBorder.none,
-      ),
-    );
   }
 }

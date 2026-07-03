@@ -12,6 +12,13 @@ import '../ticket_history.dart';
 import '../trip_history.dart';
 
 class BookingHistoryScreen extends StatefulWidget {
+  final int initialTab;
+
+  const BookingHistoryScreen({
+    Key? key,
+    this.initialTab = 0,
+  }) : super(key: key);
+
   @override
   State<BookingHistoryScreen> createState() => _BookingHistoryScreenState();
 }
@@ -27,7 +34,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
     super.initState();
 
     // MUST be initialized before build()
-    tabController = TabController(length: 2, vsync: this);
+    tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTab);
 
     // Safe to run APIs here
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -63,20 +70,30 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
     }
   }
 
-  // ------- STATIC BUS DATA -------
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: getAppBar(context, "My Bookings", isLeading: false, bottom: TabBar(controller: tabController, labelColor: Colors.black, indicatorColor: AppTheme.appThemeColor, unselectedLabelColor: Colors.grey, tabs: const [Tab(text: "Hotels/ Homestays",), Tab(text: "Bus Booking")])),
+      appBar: getAppBar(
+        context,
+        "my_bookings".tr,
+        isLeading: false,
+        bottom: TabBar(
+          controller: tabController,
+          labelColor: Colors.black,
+          indicatorColor: AppTheme.appThemeColor,
+          unselectedLabelColor: Colors.grey,
+          tabs: [
+            Tab(text: "hotels_homestays".tr),
+            Tab(text: "bus_booking".tr),
+          ],
+        ),
+      ),
       body: TabBarView(
         controller: tabController,
         children: [
           // ------------------- HOTELS TAB --------------------------
           _buildHotelTab(),
-
-          // ------------------- HOMESTAYS TAB ------------------------
 
           // ------------------- BUS BOOKING TAB ----------------------
           _buildBusBookingGrid(),
@@ -101,7 +118,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
               Icon(Icons.hotel_class, size: 70, color: Colors.grey.shade400),
               const SizedBox(height: 16),
               Text(
-                "No booking history found",
+                "no_booking_history_found".tr,
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -142,9 +159,6 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
     required String title,
     required String guestName,
     required String propertyType,
-    // required VoidCallback onRemove,
-    // required VoidCallback onDownload,
-    // required VoidCallback onTap,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -257,11 +271,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
   }
 
   // ========================================================
-  // HOMESTAY GRID (DUMMY — attach your API)
-  // ========================================================
-
-  // ========================================================
-  // BUS BOOKING GRID (DUMMY — attach your API)
+  // BUS BOOKING GRID
   // ========================================================
   Widget _buildBusBookingGrid() {
     return ListView.builder(
@@ -275,11 +285,10 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           child: busBookingCard(
             from: bus?.originname ?? "",
             to: bus?.destinantionname ?? "",
-            // date: bus?.departureDatetime??"",
             time: bus?.departureDatetime ?? "",
             busName: bus?.companyName ?? "",
             passengers: bus?.seatCount ?? 0,
-            rating: bus?.reviewRating ?? "", // 3 out of 5
+            rating: bus?.reviewRating ?? "",
           ),
         );
       },
@@ -289,11 +298,10 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
   Widget busBookingCard({
     required String from,
     required String to,
-    // required String date,
     required String time,
     required String busName,
     required int passengers,
-    required String rating, // ex: 3.0 -> 3 stars
+    required String rating,
   }) {
     int ratingValue = int.tryParse(rating) ?? 0;
 
@@ -318,9 +326,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // redBus Logo
               Icon(Icons.bus_alert),
-
               Row(
                 children: [
                   const Icon(Icons.group, size: 20, color: Colors.black45),
@@ -350,9 +356,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
 
           const SizedBox(height: 4),
 
-          // Date + Time
+          // Time
           Text(
-            " $time",
+            time,
             style: GoogleFonts.poppins(fontSize: 14, color: Colors.black54),
           ),
 
@@ -373,26 +379,25 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
           // Rating Row
           ratingValue > 0
               ? Row(
-                  children: [
-                    Text(
-                      "You rated  ",
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.black54,
-                      ),
-                    ),
-
-                    ...List.generate(
-                      5,
-                      (index) => Icon(
-                        index < ratingValue ? Icons.star : Icons.star_border,
-                        color: index < ratingValue ? Colors.amber : Colors.grey,
-                        size: 18,
-                      ),
-                    ),
-                  ],
-                )
-              : const SizedBox.shrink(), // HIDE COMPLETELY
+            children: [
+              Text(
+                "${"you_rated".tr}  ",
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+              ),
+              ...List.generate(
+                5,
+                    (index) => Icon(
+                  index < ratingValue ? Icons.star : Icons.star_border,
+                  color: index < ratingValue ? Colors.amber : Colors.grey,
+                  size: 18,
+                ),
+              ),
+            ],
+          )
+              : const SizedBox.shrink(),
         ],
       ),
     );

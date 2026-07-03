@@ -1,4 +1,5 @@
 import 'package:elior/response_model/get_all_coupons_response.dart';
+import 'package:elior/response_model/home_stay_respnse/budget_firendly_homestay_response.dart';
 import 'package:elior/response_model/nearby_properties_response.dart';
 import 'package:elior/response_model/top_hotel_model.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,6 +11,7 @@ class TopHotelController extends GetxController {
   TopHotelModel topHotelModel = TopHotelModel();
   NearbyPropertiesResponse nearbyProperties = NearbyPropertiesResponse();
   CouponResponse couponResponse = CouponResponse();
+  BudgetFriendlyHomestaysResponse budgetFriendlyHomestays = BudgetFriendlyHomestaysResponse();
 
   @override
   void onInit() {
@@ -17,6 +19,7 @@ class TopHotelController extends GetxController {
       // fetchHotels();
       fetchNearby();
       fetchAllCoupons();
+      budgetHomeStays();
     });
     super.onInit();
   }
@@ -42,6 +45,15 @@ class TopHotelController extends GetxController {
   Future<void> fetchAllCoupons() async {
     try {
       couponResponse = await ServiceProvider().fetchAllCoupons();
+    } catch (e) {
+      debugPrint('Statelistdata error: $e');
+    }
+  }
+
+
+  Future<void> budgetHomeStays() async {
+    try {
+      budgetFriendlyHomestays = await ServiceProvider().getBudgetFriendlyHomestays();
     } catch (e) {
       debugPrint('Statelistdata error: $e');
     }

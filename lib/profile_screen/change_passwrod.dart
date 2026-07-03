@@ -27,7 +27,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     } else if (newPwd != confirmPwd) {
       _showSnackBar("newPasswordoNotMatch".tr);
     } else {
-      _showSnackBar("Password changed successfully!");
+      _showSnackBar("passwordChangedSuccess".tr);
       // Add your backend logic here
     }
   }
@@ -63,9 +63,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Change Password",
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          "changePassword".tr,
+          style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.blueAccent,
         leading: IconButton(
@@ -87,21 +87,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             child: Column(
               children: [
                 _buildPasswordField(
-                  label: "Old Password",
+                  label: "oldPassword".tr,
                   controller: _oldPasswordController,
                   obscure: _obscureOld,
                   onToggle: () => setState(() => _obscureOld = !_obscureOld),
                 ),
                 const SizedBox(height: 20),
                 _buildPasswordField(
-                  label: "New Password",
+                  label: "newPassword".tr,
                   controller: _newPasswordController,
                   obscure: _obscureNew,
                   onToggle: () => setState(() => _obscureNew = !_obscureNew),
                 ),
                 const SizedBox(height: 20),
                 _buildPasswordField(
-                  label: "Confirm Password",
+                  label: "confirmPassword".tr,
                   controller: _confirmPasswordController,
                   obscure: _obscureConfirm,
                   onToggle: () =>
@@ -113,9 +113,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: _changePassword,
-                    child: const Text(
-                      "Save Password",
-                      style: TextStyle(color: Colors.white),
+                    child: Text(
+                      "savePassword".tr,
+                      style: const TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueAccent,

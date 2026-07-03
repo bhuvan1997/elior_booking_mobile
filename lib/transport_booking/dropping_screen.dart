@@ -1,6 +1,10 @@
+import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/response_model/transport_response/proceed_model.dart';
 import 'package:elior/transport_booking/passenger_inforrmation_screen.dart';
+import 'package:elior/widgets/app_button.dart';
+import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../network/service_provider.dart';
 import '../response_model/transport_response/pickup_model.dart';
@@ -56,10 +60,10 @@ class _BoardingDroppingScreenState extends State<BoardingDroppingScreen>
 
         /// Default selections if available
         if (busPikUpModel
-                ?.data
-                ?.boardingPoint
-                ?.boardingPointStops
-                ?.isNotEmpty ??
+            ?.data
+            ?.boardingPoint
+            ?.boardingPointStops
+            ?.isNotEmpty ??
             false) {
           final first =
               busPikUpModel!.data!.boardingPoint!.boardingPointStops!.first;
@@ -68,10 +72,10 @@ class _BoardingDroppingScreenState extends State<BoardingDroppingScreen>
         }
 
         if (busPikUpModel
-                ?.data
-                ?.droppingPoint
-                ?.droppingPointStops
-                ?.isNotEmpty ??
+            ?.data
+            ?.droppingPoint
+            ?.droppingPointStops
+            ?.isNotEmpty ??
             false) {
           final first =
               busPikUpModel!.data!.droppingPoint!.droppingPointStops!.first;
@@ -94,9 +98,7 @@ class _BoardingDroppingScreenState extends State<BoardingDroppingScreen>
       proceedModel = await ServiceProvider().proceedApi(
         seats: widget.Seats,
         busId: widget.busId,
-        // You can make this dynamic if needed
         busRouteId: widget.busrouteId,
-        // You can make this dynamic too
         BoardingPointId: BoardingPointId,
         droppingPointId: droppingPointId,
         SeatPrice: widget.seatPrice,
@@ -105,14 +107,11 @@ class _BoardingDroppingScreenState extends State<BoardingDroppingScreen>
       setState(() => isLoading = false);
 
       if (proceedModel?.status == true) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("✅ Proceed successful!")));
         print("✅ Proceed API Success → ${proceedModel?.message}");
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("⚠️ ${proceedModel?.message ?? 'Unknown error'}"),
+            content: Text("${"error_prefix".tr} ${proceedModel?.message ?? "unknown_error".tr}"),
           ),
         );
       }
@@ -130,48 +129,28 @@ class _BoardingDroppingScreenState extends State<BoardingDroppingScreen>
         busPikUpModel?.data?.droppingPoint?.droppingPointStops ?? [];
 
     return Scaffold(
-      backgroundColor: const Color(0xfff6f6f6),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        titleSpacing: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Select boarding & dropping points",
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
-            ),
-            Text(
-              "${busPikUpModel?.data?.boardingCity ?? ''} → ${busPikUpModel?.data?.droppingCity ?? ''}",
-              style: const TextStyle(color: Colors.grey, fontSize: 14),
-            ),
-          ],
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.red,
-          labelColor: Colors.black,
-          unselectedLabelColor: Colors.grey,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-          tabs: const [
-            Tab(text: "Boarding points"),
-            Tab(text: "Dropping points"),
-          ],
-        ),
+      appBar: getAppBar(
+        context,
+        "select_boarding_dropping".tr,
+        subtext:
+        "${busPikUpModel?.data?.boardingCity ?? ''} → ${busPikUpModel?.data?.droppingCity ?? ''}",
+        isSubtext: true,
+        centerTitle: false,
       ),
-
-      body: busPikUpModel == null
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
+      body: Column(
+        children: [
+          TabBar(
+            controller: _tabController,
+            labelColor: AppTheme.appThemeColor,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: AppTheme.appThemeColor,
+            tabs: [
+              Tab(text: "boarding".tr),
+              Tab(text: "dropping".tr),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
               controller: _tabController,
               children: [
                 /// 🚌 Boarding Points
@@ -179,13 +158,13 @@ class _BoardingDroppingScreenState extends State<BoardingDroppingScreen>
                   boardingStops
                       .map(
                         (e) => {
-                          "time": e.time ?? "",
-                          "title": e.pointname ?? "",
-                          "date": e.date ?? "",
-                          "sub": e.address ?? "",
-                          "id": e.pointId?.toString() ?? "0",
-                        },
-                      )
+                      "time": e.time ?? "",
+                      "title": e.pointname ?? "",
+                      "date": e.date ?? "",
+                      "sub": e.address ?? "",
+                      "id": e.pointId?.toString() ?? "0",
+                    },
+                  )
                       .toList(),
                   selectedBoardPoint,
                   true,
@@ -197,13 +176,13 @@ class _BoardingDroppingScreenState extends State<BoardingDroppingScreen>
                   droppingStops
                       .map(
                         (e) => {
-                          "time": e.time ?? "",
-                          "title": e.pointname ?? "",
-                          "date": e.date ?? "",
-                          "sub": e.address ?? "",
-                          "id": e.pointId?.toString() ?? "0",
-                        },
-                      )
+                      "time": e.time ?? "",
+                      "title": e.pointname ?? "",
+                      "date": e.date ?? "",
+                      "sub": e.address ?? "",
+                      "id": e.pointId?.toString() ?? "0",
+                    },
+                  )
                       .toList(),
                   selectedDropPoint,
                   false,
@@ -211,58 +190,38 @@ class _BoardingDroppingScreenState extends State<BoardingDroppingScreen>
                 ),
               ],
             ),
-
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
-        color: Colors.white,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor:
-                (selectedBoardingPointId != null &&
-                    selectedDroppingPointId != null)
-                ? Colors.red
-                : Colors.grey,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 14),
           ),
-          onPressed:
-              (selectedBoardingPointId == null ||
-                  selectedDroppingPointId == null)
+        ],
+      ),
+
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: AppButton(
+          title: "proceed".tr,
+          onTap:
+          (selectedBoardingPointId == null || selectedDroppingPointId == null)
               ? null
               : () async {
-                  await proceedDataApi(
-                    BoardingPointId: selectedBoardingPointId!,
-                    droppingPointId: selectedDroppingPointId!,
-                  );
+            await proceedDataApi(
+              BoardingPointId: selectedBoardingPointId!,
+              droppingPointId: selectedDroppingPointId!,
+            );
 
-                  if (proceedModel?.status == true) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PassengerInformationScreen(
-                          proceedModel: proceedModel!,
-                        ),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Unable to proceed")),
-                    );
-                  }
-                },
-
-          child: isLoading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text(
-                  "Proceed",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+            if (proceedModel?.status == true) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PassengerInformationScreen(
+                    proceedModel: proceedModel ?? ProceedModel(),
                   ),
                 ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("unable_to_proceed".tr)),
+              );
+            }
+          },
         ),
       ),
     );
@@ -270,11 +229,11 @@ class _BoardingDroppingScreenState extends State<BoardingDroppingScreen>
 
   /// 🔹 Boarding / Dropping Points List
   Widget _buildPointsList(
-    List<Map<String, String>> points,
-    String? selected,
-    bool isBoarding,
-    String city,
-  ) {
+      List<Map<String, String>> points,
+      String? selected,
+      bool isBoarding,
+      String city,
+      ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -283,8 +242,8 @@ class _BoardingDroppingScreenState extends State<BoardingDroppingScreen>
             alignment: Alignment.centerLeft,
             child: Text(
               isBoarding
-                  ? "All boarding points in $city"
-                  : "All dropping points in $city",
+                  ? "${"all_boarding_points_in".tr} $city"
+                  : "${"all_dropping_points_in".tr} $city",
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -312,7 +271,7 @@ class _BoardingDroppingScreenState extends State<BoardingDroppingScreen>
               child: RadioListTile<String>(
                 value: point["title"]!,
                 groupValue: selected,
-                activeColor: Colors.red,
+                activeColor: AppTheme.appThemeColor,
                 onChanged: (value) {
                   setState(() {
                     if (isBoarding) {

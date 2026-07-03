@@ -1,4 +1,6 @@
+import 'package:elior/app_values/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../response_model/transport_response/bus_seat_botttom_model.dart';
 import '../network/service_provider.dart';
@@ -24,10 +26,10 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
   bool _isTabClicked = false;
 
   final sectionKeys = {
-    "Highlights": GlobalKey(),
-    "Boarding": GlobalKey(),
-    "Dropping": GlobalKey(),
-    "Amenities": GlobalKey(),
+    "highlights".tr: GlobalKey(),
+    "boarding".tr: GlobalKey(),
+    "dropping".tr: GlobalKey(),
+    "amenities".tr: GlobalKey(),
   };
 
   BusSeatBottomModel? _busSeatBottomModel;
@@ -115,18 +117,6 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
       ),
       child: Column(
         children: [
-          const SizedBox(height: 10),
-          Container(
-            width: 50,
-            height: 5,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -137,7 +127,7 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        data?.companyName ?? "Bus Company",
+                        data?.companyName ?? "unknown_company".tr,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -183,8 +173,8 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
             controller: _tabController,
             onTap: _scrollToSection,
             isScrollable: true,
-            indicatorColor: Colors.blue,
-            labelColor: Colors.blue,
+            indicatorColor: AppTheme.appThemeColor,
+            labelColor: AppTheme.appThemeColor,
             unselectedLabelColor: Colors.grey,
             tabs: sectionKeys.keys.map((e) => Tab(text: e)).toList(),
           ),
@@ -214,19 +204,19 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
     final images = data?.busImages ?? [];
 
     return Container(
-      key: sectionKeys["Highlights"],
+      key: sectionKeys["highlights".tr],
       margin: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Highlights",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            "highlights".tr,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(Icons.access_time, color: Colors.blue),
+              const Icon(Icons.access_time, color: AppTheme.appThemeColor),
               const SizedBox(width: 6),
               Text(
                 "${data?.departureTime ?? '--'} → ${data?.arrivalTime ?? '--'}",
@@ -234,7 +224,7 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
             ],
           ),
           const SizedBox(height: 8),
-          Text("Departure Date: ${data?.departureDate ?? '--'}"),
+          Text("${"departure_date".tr}: ${data?.departureDate ?? '--'}"),
           const SizedBox(height: 12),
           if (images.isNotEmpty)
             SizedBox(
@@ -265,13 +255,13 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
     final stops = boarding?.boardingPointStops ?? [];
 
     return Container(
-      key: sectionKeys["Boarding"],
+      key: sectionKeys["boarding".tr],
       margin: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Boarding Point - $city",
+            "${"boarding_point".tr} - $city",
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
@@ -279,7 +269,7 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 4),
               child: ListTile(
-                leading: const Icon(Icons.directions_bus, color: Colors.blue),
+                leading: const Icon(Icons.directions_bus, color: AppTheme.appThemeColor),
                 title: Text(stop.pointname ?? ''),
                 subtitle: Text(stop.address ?? ''),
                 trailing: Text(stop.time ?? ''),
@@ -297,13 +287,13 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
     final stops = dropping?.droppingPointStops ?? [];
 
     return Container(
-      key: sectionKeys["Dropping"],
+      key: sectionKeys["dropping".tr],
       margin: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Dropping Point - $city",
+            "${"dropping_point".tr} - $city",
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
@@ -313,7 +303,7 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
               child: ListTile(
                 leading: const Icon(
                   Icons.location_on_outlined,
-                  color: Colors.red,
+                  color: AppTheme.appThemeColor,
                 ),
                 title: Text(stop.pointname ?? ''),
                 subtitle: Text(stop.address ?? ''),
@@ -329,14 +319,14 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
   // 🔹 Amenities Section
   Widget buildAmenitiesSection(List<String> amenities) {
     return Container(
-      key: sectionKeys["Amenities"],
+      key: sectionKeys["amenities".tr],
       margin: const EdgeInsets.only(bottom: 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Amenities",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            "amenities".tr,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -345,10 +335,10 @@ class _BusDetailsBottomSheetState extends State<BusDetailsBottomSheet>
             children: amenities
                 .map(
                   (a) => Chip(
-                    label: Text(a),
-                    backgroundColor: Colors.blue.shade50,
-                  ),
-                )
+                label: Text(a),
+                backgroundColor: Colors.blue.shade50,
+              ),
+            )
                 .toList(),
           ),
         ],

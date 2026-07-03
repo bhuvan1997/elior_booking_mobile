@@ -80,7 +80,9 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
 
   void _initializeDates() {
     checkInDate = _parseDate(model.searchParams?.startDate) ?? DateTime.now();
-    checkOutDate = _parseDate(model.searchParams?.endDate) ?? DateTime.now().add(const Duration(days: 1));
+    checkOutDate =
+        _parseDate(model.searchParams?.endDate) ??
+            DateTime.now().add(const Duration(days: 1));
 
     if (checkInDate != null) {
       checkInController.text = _formatDateForDisplay(checkInDate!);
@@ -98,12 +100,16 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
     return dateStr != null ? DateTime.tryParse(dateStr) : null;
   }
 
-  String _formatDateForDisplay(DateTime date) => DateFormat('dd MMM yyyy').format(date);
-  String _formatDateForApi(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
+  String _formatDateForDisplay(DateTime date) =>
+      DateFormat('dd MMM yyyy').format(date);
+  String _formatDateForApi(DateTime date) =>
+      DateFormat('yyyy-MM-dd').format(date);
   String _formatShortDate(String? dateStr) {
     if (dateStr == null || dateStr.isEmpty) return 'DD/MM';
     try {
-      return DateFormat("d MMM").format(DateFormat("yyyy-MM-dd").parse(dateStr));
+      return DateFormat(
+        "d MMM",
+      ).format(DateFormat("yyyy-MM-dd").parse(dateStr));
     } catch (_) {
       return dateStr;
     }
@@ -173,12 +179,21 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
 
   void _onSearchChanged(String query) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () => _filterHotels(query));
+    _debounce = Timer(
+      const Duration(milliseconds: 300),
+          () => _filterHotels(query),
+    );
   }
 
-  Future<void> _selectDate(BuildContext context, {required bool isCheckIn}) async {
+  Future<void> _selectDate(
+      BuildContext context, {
+        required bool isCheckIn,
+      }) async {
     if (!isCheckIn && checkInDate == null) {
-      _showSnackBar("Select Check-In First", "Please select a check-in date first.");
+      _showSnackBar(
+        "select_check_in_first".tr,
+        "select_check_in_first_msg".tr,
+      );
       return;
     }
 
@@ -199,7 +214,7 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
     if (picked == null) return;
 
     if (!isCheckIn && picked.isBefore(checkInDate!)) {
-      _showSnackBar("Invalid Date", "Check-out must be after check-in");
+      _showSnackBar("invalid_date".tr, "checkout_must_be_after".tr);
       return;
     }
 
@@ -221,11 +236,15 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
   Future<void> filterFetchHotels() async {
     setState(() => _isLoading = true);
     try {
-      filterModel = await ServiceProvider().filterHotelApi();
+      if (slug == "hotel") {
+        filterModel = await ServiceProvider().filterHotelApi();
+      } else {
+        filterModel = await ServiceProvider().filterHomeStayApi();
+      }
       if (filterModel.status == true) {
         _openFilterBottomSheet();
       } else {
-        _showSnackBar("Error", "Failed to load filters");
+        _showSnackBar("error".tr, "failed".tr);
       }
     } catch (e) {
       debugPrint('Filter error: $e');
@@ -237,11 +256,15 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
   Future<void> filterSortHotels() async {
     setState(() => _isLoading = true);
     try {
-      filterModel = await ServiceProvider().filterHotelApi();
+      if (slug == "hotel") {
+        filterModel = await ServiceProvider().filterHotelApi();
+      } else {
+        filterModel = await ServiceProvider().filterHomeStayApi();
+      }
       if (filterModel.status == true && filterModel.sorting != null) {
         _openFilterSortSheet();
       } else {
-        _showSnackBar("Error", "Sorting options not available");
+        _showSnackBar("error".tr, "something_went_wrong".tr);
       }
     } catch (e) {
       debugPrint('Sort error: $e');
@@ -269,7 +292,9 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       );
 
       if (result.data?.isNotEmpty == true) {
-        filteredHotels = result.data!.map((datams) => Property.fromDatam(datams)).toList();
+        filteredHotels = result.data!
+            .map((datams) => Property.fromDatam(datams))
+            .toList();
         searchHotelModel.data = filteredHotels;
 
         // Update favorites
@@ -299,7 +324,9 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       );
 
       if (result.data?.isNotEmpty == true) {
-        filteredHotels = result.data!.map((d) => Property.fromDataSort(d)).toList();
+        filteredHotels = result.data!
+            .map((d) => Property.fromDataSort(d))
+            .toList();
         searchHotelModel.data = filteredHotels;
 
         // Update favorites
@@ -318,14 +345,15 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
     }
   }
 
-
   void _initializeFavoritesFromResponse() {
     // Initialize favorites from the response data
     setState(() {
-      favoriteIds = model.data
-          ?.where((property) => property.isFavourite == 1)
-          .map((property) => property.id ?? 0)
-          .toSet() ?? {};
+      favoriteIds =
+          model.data
+              ?.where((property) => property.isFavourite == 1)
+              .map((property) => property.id ?? 0)
+              .toSet() ??
+              {};
     });
   }
 
@@ -369,7 +397,7 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
           favoriteIds.remove(id);
         }
       });
-      _showSnackBar("Error", "Failed to update favorite");
+      _showSnackBar("error".tr, "failed".tr);
       debugPrint("Favorite error: $e");
     }
   }
@@ -381,11 +409,13 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
   void _navigateToHotelDetail(Property hotel) {
     LocalStorages().saveCheckIn(checkIn: model.searchParams?.startDate ?? "");
     LocalStorages().saveCheckOut(checkOut: model.searchParams?.endDate ?? "");
-    Get.to(() => UnifiedPropertyDetailsScreen(
-      id: hotel.id ?? 0,
-      fac: hotel.translatedDescription ?? "",
-      slug: slug ?? "hotel",
-    ));
+    Get.to(
+          () => UnifiedPropertyDetailsScreen(
+        id: hotel.id ?? 0,
+        fac: hotel.translatedDescription ?? "",
+        slug: slug ?? "hotel",
+      ),
+    );
   }
 
   String formatTime(String time) {
@@ -425,7 +455,10 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildSortButton(),
-          const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('|')),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Text('|'),
+          ),
           _buildFilterButton(),
         ],
       ),
@@ -439,7 +472,13 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
         children: [
           const Icon(Icons.sort, color: Colors.white),
           const SizedBox(width: 4),
-          Text('Sort', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w500)),
+          Text(
+            'sort'.tr,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -452,7 +491,13 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
         children: [
           const Icon(Icons.filter_list, color: Colors.white),
           const SizedBox(width: 4),
-          Text('Filter', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w500)),
+          Text(
+            'filter'.tr,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -465,7 +510,7 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       centerTitle: false,
       isSubtext: true,
       subtextWidget: GestureDetector(
-        onTap: () => Get.off(HotelHomeSearchScreen()),
+        onTap: () => setState(() => isEditable = true),
         child: _buildDateCard(
           Icons.calendar_today,
           "${_formatShortDate(model.searchParams?.startDate)} - ${_formatShortDate(model.searchParams?.endDate)}",
@@ -476,7 +521,10 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
           onTap: () => setState(() => isSearch = !isSearch),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Image(image: AssetImage(AssetsScreen.searchIconOrange), width: 20),
+            child: Image(
+              image: AssetImage(AssetsScreen.searchIconOrange),
+              width: 20,
+            ),
           ),
         ),
       ],
@@ -492,21 +540,29 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _buildDateTextField(checkInController, "Check-In", true)),
+              Expanded(
+                child: _buildDateTextField(checkInController, "check_in".tr, true),
+              ),
               const SizedBox(width: 16),
-              Expanded(child: _buildDateTextField(checkOutController, "Check-Out", false)),
+              Expanded(
+                child: _buildDateTextField(
+                  checkOutController,
+                  "check_out".tr,
+                  false,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
           AppButton(
-            title: "Update Search",
+            title: "update_search".tr,
             onTap: () async {
               if (locationController.text.trim().isEmpty) {
-                _showSnackBar("Error", "Please enter a location");
+                _showSnackBar("error".tr, "please_enter_location".tr);
                 return;
               }
               if (checkInDate == null || checkOutDate == null) {
-                _showSnackBar("Error", "Please select both dates");
+                _showSnackBar("error".tr, "select_both_dates".tr);
                 return;
               }
               await searchHotel();
@@ -518,7 +574,11 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
     );
   }
 
-  Widget _buildDateTextField(TextEditingController controller, String label, bool isCheckIn) {
+  Widget _buildDateTextField(
+      TextEditingController controller,
+      String label,
+      bool isCheckIn,
+      ) {
     return GestureDetector(
       onTap: () => _selectDate(context, isCheckIn: isCheckIn),
       child: Container(
@@ -536,10 +596,22 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: const TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w500)),
                   Text(
-                    controller.text.isEmpty ? "Select date" : controller.text,
-                    style: TextStyle(fontSize: 12, color: controller.text.isEmpty ? Colors.grey : Colors.black),
+                    label,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.orange,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    controller.text.isEmpty ? "select_date".tr : controller.text,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: controller.text.isEmpty
+                          ? Colors.grey
+                          : Colors.black,
+                    ),
                   ),
                 ],
               ),
@@ -557,12 +629,15 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
         controller: _searchController,
         onChanged: _onSearchChanged,
         decoration: InputDecoration(
-          hintText: "Search hotels...",
+          hintText: "search_hotels".tr,
           filled: true,
           fillColor: Colors.white,
           prefixIcon: const Icon(Icons.search, color: Colors.orange),
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
     );
@@ -574,7 +649,7 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
     }
 
     if (filteredHotels.isEmpty) {
-      return const Center(child: Text("No hotels found"));
+      return Center(child: Text("no_hotels_found".tr));
     }
 
     return ListView.builder(
@@ -585,7 +660,7 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       itemBuilder: (context, index) {
         final hotel = filteredHotels[index];
         return HotelCard(
-          data: hotel, // This needs to accept Property, not Data
+          data: hotel,
           isFavorite: hotel.isFavourite == 1,
           onTap: () => _navigateToHotelDetail(hotel),
           onFavoriteToggle: () => _toggleFavorite(hotel.id ?? 0),
@@ -593,7 +668,6 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       },
     );
   }
-
 
   Widget _buildLocationField() {
     return Container(
@@ -605,10 +679,20 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Area, Landmark", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w500, fontSize: 12)),
+          Text(
+            "area_landmark".tr,
+            style: const TextStyle(
+              color: Colors.orange,
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
+            ),
+          ),
           TextField(
             controller: locationController,
-            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w500,
+            ),
             decoration: const InputDecoration(border: InputBorder.none),
           ),
         ],
@@ -622,11 +706,22 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       decoration: const BoxDecoration(color: Colors.transparent),
       child: Row(
         children: [
-          Text(text, style: const TextStyle(fontSize: 12, color: Colors.black87, fontWeight: FontWeight.w400)),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.black87,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
           const SizedBox(width: 10),
-          GestureDetector(
-            onTap: () => setState(() => isEditable = !isEditable),
-            child: Text("Edit", style: const TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.w600)),
+          Text(
+            "edit".tr,
+            style: const TextStyle(
+              color: Colors.orange,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -643,7 +738,9 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
       builder: (context) {
         List<String> tempSelectedFeatures = [];
         List<String> tempSelectedRules = [];
@@ -654,13 +751,26 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
           builder: (context, localSetState) {
             final allFeatures = filterModel.allFeatures ?? [];
             final allRules = filterModel.allRules ?? [];
-            final starRatings = (filterModel.starRating?.toJson().keys.where((e) => e.isNotEmpty) ?? []).toList();
-            final pricingRanges = (filterModel.pricing?.toJson().keys.where((e) => e.isNotEmpty) ?? []).toList();
+            final starRatings =
+            (filterModel.starRating?.toJson().keys.where(
+                  (e) => e.isNotEmpty,
+            ) ??
+                [])
+                .toList();
+            final pricingRanges =
+            (filterModel.pricing?.toJson().keys.where(
+                  (e) => e.isNotEmpty,
+            ) ??
+                [])
+                .toList();
 
             return FractionallySizedBox(
               heightFactor: 0.7,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -673,12 +783,14 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildFilterSection(
-                              title: "Hotel Features",
+                              title: "hotel_features".tr,
                               options: allFeatures,
                               selectedValues: tempSelectedFeatures,
                               isMultiSelect: true,
                               showAll: showAllFeatures,
-                              onToggle: () => localSetState(() => showAllFeatures = !showAllFeatures),
+                              onToggle: () => localSetState(
+                                    () => showAllFeatures = !showAllFeatures,
+                              ),
                               onSelected: (v) => localSetState(() {
                                 if (tempSelectedFeatures.contains(v)) {
                                   tempSelectedFeatures.remove(v);
@@ -688,12 +800,14 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
                               }),
                             ),
                             _buildFilterSection(
-                              title: "Hotel Rules",
+                              title: "hotel_rules".tr,
                               options: allRules,
                               selectedValues: tempSelectedRules,
                               isMultiSelect: true,
                               showAll: showAllRules,
-                              onToggle: () => localSetState(() => showAllRules = !showAllRules),
+                              onToggle: () => localSetState(
+                                    () => showAllRules = !showAllRules,
+                              ),
                               onSelected: (v) => localSetState(() {
                                 if (tempSelectedRules.contains(v)) {
                                   tempSelectedRules.remove(v);
@@ -703,12 +817,14 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
                               }),
                             ),
                             _buildFilterSection(
-                              title: "Hotel Star Rating",
+                              title: "hotel_star_rating".tr,
                               options: starRatings,
                               selectedValues: tempSelectedStars,
                               isMultiSelect: true,
                               showAll: showAllStars,
-                              onToggle: () => localSetState(() => showAllStars = !showAllStars),
+                              onToggle: () => localSetState(
+                                    () => showAllStars = !showAllStars,
+                              ),
                               onSelected: (v) => localSetState(() {
                                 if (tempSelectedStars.contains(v)) {
                                   tempSelectedStars.remove(v);
@@ -718,14 +834,17 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
                               }),
                             ),
                             _buildFilterSection(
-                              title: "Hotel Price Range",
+                              title: "hotel_price_range".tr,
                               options: pricingRanges,
                               selectedValues: null,
                               selectedValue: tempSelectedPrice,
                               isMultiSelect: false,
                               showAll: showAllPrices,
-                              onToggle: () => localSetState(() => showAllPrices = !showAllPrices),
-                              onSelected: (v) => localSetState(() => tempSelectedPrice = v),
+                              onToggle: () => localSetState(
+                                    () => showAllPrices = !showAllPrices,
+                              ),
+                              onSelected: (v) =>
+                                  localSetState(() => tempSelectedPrice = v),
                             ),
                           ],
                         ),
@@ -737,7 +856,15 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
                       await searchHotelWithFilters(
                         features: tempSelectedFeatures,
                         rules: tempSelectedRules,
-                        stars: tempSelectedStars.map((e) => int.tryParse(e.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0).toList(),
+                        stars: tempSelectedStars
+                            .map(
+                              (e) =>
+                          int.tryParse(
+                            e.replaceAll(RegExp(r'[^0-9]'), ''),
+                          ) ??
+                              0,
+                        )
+                            .toList(),
                         pricing: tempSelectedPrice,
                       );
                     }),
@@ -756,7 +883,10 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       width: 50,
       height: 5,
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(10),
+      ),
     );
   }
 
@@ -764,10 +894,20 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text('Filters', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(
+          'filters'.tr,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         GestureDetector(
           onTap: () => Navigator.pop(context),
-          child: const Text('Clear', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange)),
+          child: Text(
+            'clear'.tr,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.orange,
+            ),
+          ),
         ),
       ],
     );
@@ -789,7 +929,10 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Divider(),
-        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -813,7 +956,13 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
         if (options.length > 4)
           TextButton(
             onPressed: onToggle,
-            child: Text(showAll ? 'View less' : 'View all (${options.length})', style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w500)),
+            child: Text(
+              showAll ? 'view_less'.tr : '${"view_all".tr} (${options.length})',
+              style: const TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
       ],
     );
@@ -827,9 +976,14 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.orange,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-        child: const Text('Show Properties', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        child: Text(
+          'show_properties'.tr,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
       ),
     );
   }
@@ -843,12 +997,19 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 20, right: 20, top: 20),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 20,
+                right: 20,
+                top: 20,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -856,14 +1017,23 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
                   _buildDragHandle(),
                   _buildSortHeader(),
                   const SizedBox(height: 16),
-                  ...sortingOptions.entries.map((entry) => RadioListTile<String>(
-                    value: entry.value,
-                    groupValue: tempSelectedSort,
-                    onChanged: (val) => setModalState(() => tempSelectedSort = val!),
-                    title: Text(entry.key, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                    activeColor: Colors.orange,
-                    contentPadding: EdgeInsets.zero,
-                  )),
+                  ...sortingOptions.entries.map(
+                        (entry) => RadioListTile<String>(
+                      value: entry.value,
+                      groupValue: tempSelectedSort,
+                      onChanged: (val) =>
+                          setModalState(() => tempSelectedSort = val!),
+                      title: Text(
+                        entry.key,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      activeColor: Colors.orange,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   _buildApplyButton(() async {
                     Navigator.pop(context);
@@ -888,20 +1058,38 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
           child: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
         ),
         const SizedBox(width: 10),
-        const Text('Sort by', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(
+          'sort_by'.tr,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
 }
 
 class HotelTranslator {
-  static Future<void> translateHotels(List<Property> hotels, String langCode) async {
+  static Future<void> translateHotels(
+      List<Property> hotels,
+      String langCode,
+      ) async {
     final translator = TranslationService();
     for (var hotel in hotels) {
-      hotel.translatedName = await translator.translateText(hotel.name ?? "", langCode);
-      hotel.translatedCityCountry = await translator.translateText("${hotel.city ?? ""}, ${hotel.country ?? ""}", langCode);
-      hotel.translatedDescription = await translator.translateText(hotel.description ?? "", langCode);
-      hotel.translatedAddress = await translator.translateText(hotel.address ?? "", langCode);
+      hotel.translatedName = await translator.translateText(
+        hotel.name ?? "",
+        langCode,
+      );
+      hotel.translatedCityCountry = await translator.translateText(
+        "${hotel.city ?? ""}, ${hotel.country ?? ""}",
+        langCode,
+      );
+      hotel.translatedDescription = await translator.translateText(
+        hotel.description ?? "",
+        langCode,
+      );
+      hotel.translatedAddress = await translator.translateText(
+        hotel.address ?? "",
+        langCode,
+      );
     }
   }
 }
@@ -926,6 +1114,8 @@ class HotelCard extends StatefulWidget {
 
 class _HotelCardState extends State<HotelCard> {
   final PageController _pageController = PageController();
+
+  int _currentIndex = 0;
 
   @override
   void dispose() {
@@ -962,10 +1152,7 @@ class _HotelCardState extends State<HotelCard> {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHotelImage(),
-            _buildHotelDetails(),
-          ],
+          children: [_buildHotelImage(), _buildHotelDetails()],
         ),
       ),
     );
@@ -973,7 +1160,6 @@ class _HotelCardState extends State<HotelCard> {
 
   Widget _buildHotelImage() {
     final images = widget.data.images ?? [];
-    print("SHASHA Images count: ${images.length}");
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -985,8 +1171,12 @@ class _HotelCardState extends State<HotelCard> {
                 ? getImage(height: 200, width: double.infinity, url: null)
                 : PageView.builder(
               controller: _pageController,
-              physics: const PageScrollPhysics(),
               itemCount: images.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
               itemBuilder: (context, index) {
                 return getImage(
                   height: 200,
@@ -996,19 +1186,22 @@ class _HotelCardState extends State<HotelCard> {
               },
             ),
           ),
-          Container(
-            height: 200,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.black.withValues(alpha: 0.3),
-                  Colors.transparent,
-                ],
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
+          IgnorePointer(
+            child: Container(
+              height: 200,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.3),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
               ),
             ),
           ),
+          Positioned(bottom: 12, left: 0, right: 0, child: pageIndicator(images.length, _currentIndex, _pageController, (int value) {})),
           Positioned(
             top: 12,
             right: 12,
@@ -1040,7 +1233,10 @@ class _HotelCardState extends State<HotelCard> {
             children: [
               Text(
                 data.name ?? "",
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Row(
                 children: [
@@ -1048,7 +1244,10 @@ class _HotelCardState extends State<HotelCard> {
                   const SizedBox(width: 4),
                   Text(
                     "${data.starRating?.toString() ?? "0"}/5",
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -1069,18 +1268,24 @@ class _HotelCardState extends State<HotelCard> {
           ),
           const SizedBox(height: 10),
           Text(
-            "Check-In: ${formatTime(data.checkInTime?.toString() ?? "")} | Check-out: ${formatTime(data.checkOutTime?.toString() ?? "")}",
+            "${"check_in_label".tr} ${formatTime(data.checkInTime?.toString() ?? "")} | ${"check_out_label".tr} ${formatTime(data.checkOutTime?.toString() ?? "")}",
           ),
           const SizedBox(height: 10),
           Row(
             children: [
               Text(
                 "${data.currency ?? ""}",
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
-                " ${data.pricePerNight ?? ""} /Night",
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                " ${data.pricePerNight ?? ""} ${"per_night".tr}",
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),

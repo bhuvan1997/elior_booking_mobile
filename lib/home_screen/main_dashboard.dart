@@ -113,28 +113,27 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
               const SizedBox(height: 20),
 
               if (controller.nearbyProperties.data != null && controller.nearbyProperties.data!.isNotEmpty) ...[
-                _buildSectionHeader("Nearby Properties", icon: Icons.navigation),
+                _buildSectionHeader("nearby_properties".tr),
                 _buildNearbyPropertiesCarousel(),
                 const SizedBox(height: 20),
               ],
 
-              _buildSectionHeader("Offers Available", icon: Icons.local_offer),
+              if (controller.budgetFriendlyHomestays.data != null && controller.budgetFriendlyHomestays.data!.isNotEmpty) ...[
+                _buildSectionHeader("budget_friendly_homestays".tr),
+                _buildBudgetFriendlyHomeStaysCarousel(),
+                const SizedBox(height: 20),
+              ],
 
+              _buildSectionHeader("offers_available".tr),
               _buildOffersSection(controller.couponResponse.data ?? []),
               const SizedBox(height: 20),
 
-              _buildSectionHeader(
-                "Top Rated Hotels",
-                icon: Icons.airplane_ticket,
-              ),
+              _buildSectionHeader("top_rated_hotels".tr),
               _buildTripCarousel(),
 
               const SizedBox(height: 25),
 
-              _buildSectionHeader(
-                "Your Daily Travel Blogs",
-                icon: Icons.explore,
-              ),
+              _buildSectionHeader("your_daily_travel_blogs".tr),
               _buildTravelBlogCarousel(),
 
               const SizedBox(height: 100),
@@ -154,7 +153,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
           Expanded(
             child: CategoryCard(
               icon: Icons.hotel_outlined,
-              label: "Hotels",
+              label: "hotels".tr,
               iconColor: const Color(0xff2140C0),
               onTap: () => Get.to(HotelHomeSearchScreen(), arguments: "hotel"),
             ),
@@ -163,7 +162,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
           Expanded(
             child: CategoryCard(
               icon: Icons.home_outlined,
-              label: "Homestays",
+              label: "homestays".tr,
               iconColor: Colors.red,
               onTap: () =>
                   Get.to(HotelHomeSearchScreen(), arguments: "homestay"),
@@ -173,7 +172,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
           Expanded(
             child: CategoryCard(
               icon: Icons.directions_bus_outlined,
-              label: "Bus",
+              label: "bus".tr,
               iconColor: Colors.green,
               onTap: () => Get.to(BusBookingScreen()),
             ),
@@ -184,22 +183,16 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
   }
 
   //--------------------- SECTION HEADER ----------------------
-  Widget _buildSectionHeader(String title, {required IconData icon}) {
+  Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(left: 18.0, bottom: 8),
-      child: Row(
-        children: [
-          Icon(icon, color: AppTheme.appThemeColor, size: 20),
-          const SizedBox(width: 6),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              color: AppTheme.black,
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
-          ),
-        ],
+      child: Text(
+        title,
+        style: GoogleFonts.poppins(
+          color: AppTheme.black,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
       ),
     );
   }
@@ -221,7 +214,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Text(
-                  "No Nearby properties found",
+                  "no_nearby_properties".tr,
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     color: AppTheme.black,
@@ -235,12 +228,62 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
             width: 240,
             child: _displayCard(
               imageUrl: property.images!.first,
-              tripName: property.name ?? "Unnamed hotel",
-              tripAddress: property.address ?? "N/A",
+              tripName: property.name ?? "unnamed_hotel".tr,
+              tripAddress: property.address ?? "n_a".tr,
               tripCurrency: property.currency ?? "XOF",
               pricePerNight: property.pricePerNight ?? 0,
               starRating: property.starRating ?? 0,
               onTap: () => property.navigateToDetail(context),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  //--------------------- Budget Friendly Homestays ----------------------
+  Widget _buildBudgetFriendlyHomeStaysCarousel() {
+    return SizedBox(
+      height: 225,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: controller.budgetFriendlyHomestays.data?.length ?? 0,
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+          final nearbyProperties = controller.budgetFriendlyHomestays;
+          final property = nearbyProperties.data![index];
+          if (nearbyProperties.data == null || nearbyProperties.data!.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  "no_nearby_properties".tr,
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    color: AppTheme.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            );
+          }
+          return SizedBox(
+            width: 240,
+            child: _displayCard(
+              imageUrl: property.images!.first,
+              tripName: property.name ?? "unnamed_hotel".tr,
+              tripAddress: property.address ?? "n_a".tr,
+              tripCurrency: property.currency ?? "XOF",
+              pricePerNight: property.pricePerNight ?? 0,
+              starRating: property.starRating ?? 0,
+              onTap: () => Get.to(
+                    () => UnifiedPropertyDetailsScreen(
+                  id: property.id ?? 0,
+                  fac: '', // You can pass appropriate value if needed
+                  slug: "home",
+                ),
+              ),
             ),
           );
         },
@@ -255,7 +298,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Text(
-            "No trips found",
+            "no_trips_found".tr,
             style: GoogleFonts.poppins(
               fontSize: 15,
               color: Colors.grey,
@@ -280,7 +323,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
             width: 240,
             child: _displayCard(
               imageUrl: trip.images!.first,
-              tripName: trip.name ?? "Unnamed Trip",
+              tripName: trip.name ?? "unnamed_trip".tr,
               tripAddress: trip.address ?? "",
               tripCurrency: trip.currency ?? "XOF",
               pricePerNight: trip.pricePerNight ?? 0,
@@ -298,8 +341,6 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
       ),
     );
   }
-
-
 
   Widget _displayCard({
     required String imageUrl,
@@ -348,7 +389,6 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -380,14 +420,13 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "$tripCurrency $pricePerNight/Night",
+                        "$tripCurrency $pricePerNight${"per_night".tr}",
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                           color: Colors.black,
                         ),
                       ),
-
                       Row(
                         children: [
                           Icon(Icons.star, color: Colors.amberAccent, size: 16),
@@ -421,8 +460,8 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
         await Clipboard.setData(ClipboardData(text: couponCode));
 
         Get.snackbar(
-          "Coupon Copied",
-          "$couponCode copied to clipboard",
+          "coupon_copied".tr,
+          "$couponCode ${"copied_to_clipboard".tr}",
           snackPosition: SnackPosition.BOTTOM,
         );
       },
@@ -450,7 +489,6 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
                     url: imageUrl,
                   ),
                 ),
-
                 Positioned.fill(
                   child: Container(
                     width: double.infinity,
@@ -470,7 +508,6 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
                     ),
                   ),
                 ),
-
                 Positioned(
                   bottom: 12,
                   left: 0,
@@ -550,14 +587,13 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
                         url: blog.coverImage,
                       ),
                     ),
-
                     Padding(
                       padding: const EdgeInsets.all(10),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            blog.title ?? "Untitled Blog",
+                            blog.title ?? "untitled_blog".tr,
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
@@ -565,10 +601,9 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-
                           const SizedBox(height: 6),
                           Text(
-                            blog.content ?? "No content",
+                            blog.content ?? "no_content".tr,
                             style: GoogleFonts.poppins(
                               color: Colors.grey,
                               fontSize: 13,
@@ -577,7 +612,6 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-
                           const SizedBox(height: 8),
                         ],
                       ),
@@ -602,10 +636,10 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
           if (locale != null) {
             Get.updateLocale(locale);
             Get.snackbar(
-              "Language Changed",
+              "language_changed".tr,
               locale.languageCode == 'en'
-                  ? "App is now in English 🇬🇧"
-                  : "L'application est maintenant en français 🇫🇷",
+                  ? "app_now_in_english".tr
+                  : "app_now_in_french".tr,
             );
           }
         },
@@ -683,45 +717,45 @@ class AppDrawer extends StatelessWidget {
                   vertical: 8,
                 ),
                 children: [
-                  _sectionTitle("Account"),
+                  _sectionTitle("account".tr),
 
                   _drawerTile(
                     icon: Icons.person_outline,
-                    title: "Profile",
+                    title: "profile".tr,
                     onTap: () => Get.to(const ProfileScreen()),
                   ),
 
                   _drawerTile(
                     icon: Icons.airplane_ticket_outlined,
-                    title: "My Bookings",
+                    title: "my_bookings".tr,
                     onTap: () => Get.to(BookingHistoryScreen()),
                   ),
 
                   _drawerTile(
                     icon: Icons.favorite_border,
-                    title: "Wishlist",
+                    title: "wishlist".tr,
                     onTap: () => Get.to(MyFavScreen()),
                   ),
 
                   const SizedBox(height: 18),
 
-                  _sectionTitle("Support"),
+                  _sectionTitle("support_section".tr),
 
                   _drawerTile(
                     icon: Icons.support_agent_outlined,
-                    title: "Help & Support",
+                    title: "help_support".tr,
                     onTap: () => Get.to(ContactUsScreen()),
                   ),
 
                   _drawerTile(
                     icon: Icons.privacy_tip_outlined,
-                    title: "Privacy Policy",
+                    title: "privacy_policy".tr,
                     onTap: () {
                       Get.to(
                             () => const WebViewScreen(
                           url:
                           "https://eliorbooking.com/privacy_mobile",
-                          title: "Privacy Policy",
+                          title: "privacy_policy",
                         ),
                       );
                     },
@@ -729,13 +763,13 @@ class AppDrawer extends StatelessWidget {
 
                   _drawerTile(
                     icon: Icons.gavel_outlined,
-                    title: "Terms & Conditions",
+                    title: "terms_conditions".tr,
                     onTap: () {
                       Get.to(
                             () => const WebViewScreen(
                           url:
                           "https://eliorbooking.com/terms_condition_mobile",
-                          title: "Terms & Conditions",
+                          title: "terms_conditions",
                         ),
                       );
                     },
@@ -743,17 +777,17 @@ class AppDrawer extends StatelessWidget {
 
                   const SizedBox(height: 18),
 
-                  _sectionTitle("Business"),
+                  _sectionTitle("business_section".tr),
 
                   _drawerTile(
                     icon: Icons.home_work_outlined,
-                    title: "List Your Property",
+                    title: "list_your_property".tr,
                     onTap: () {
                       Get.to(
                             () => const WebViewScreen(
                           url:
                           "https://eliorbooking.com/list_property_mobile",
-                          title: "List Your Property",
+                          title: "list_your_property",
                         ),
                       );
                     },
@@ -761,13 +795,13 @@ class AppDrawer extends StatelessWidget {
 
                   _drawerTile(
                     icon: Icons.info_outline,
-                    title: "About App",
+                    title: "about_app".tr,
                     onTap: () {
                       Get.to(
                             () => const WebViewScreen(
                           url:
                           "https://eliorbooking.com/about_app_mobile",
-                          title: "About App",
+                          title: "about_app",
                         ),
                       );
                     },
@@ -809,7 +843,7 @@ class AppDrawer extends StatelessWidget {
         const SizedBox(height: 14),
 
         Text(
-          LocalStorages().getName() ?? "Guest User",
+          LocalStorages().getName() ?? "guest_user".tr,
           textAlign: TextAlign.center,
           style: GoogleFonts.poppins(
             fontSize: 18,
@@ -918,7 +952,7 @@ class AppDrawer extends StatelessWidget {
         child: ElevatedButton.icon(
           icon: const Icon(Icons.logout),
           label: Text(
-            "Logout",
+            "logout".tr,
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w600,
             ),
@@ -938,8 +972,8 @@ class AppDrawer extends StatelessWidget {
             Get.offAll(LoginScreen());
 
             Get.snackbar(
-              "Logged Out",
-              "You have successfully logged out.",
+              "logged_out".tr,
+              "logged_out_message".tr,
               snackPosition: SnackPosition.BOTTOM,
             );
           },

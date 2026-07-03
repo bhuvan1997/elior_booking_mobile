@@ -2,7 +2,6 @@ import '../network/service_provider.dart';
 import '../response_model/final_payment_model/final_payment_model.dart';
 import '../response_model/final_payment_model/payment_initiated_model.dart';
 
-
 class BookingResult {
   final bool isSuccess;
   final FInalPaymentModel? data;
@@ -16,6 +15,7 @@ class BookingService {
   PaymentInitiatedModel paymentInitiatedModel = PaymentInitiatedModel();
 
   Future<BookingResult> confirmBooking({
+    bool isHotel = true,
     required String propertyId,
     required String checkInDate,
     required String checkOutDate,
@@ -29,19 +29,36 @@ class BookingService {
     required String payPlan,
   }) async {
     try {
-      final result = await _serviceProvider.payFinalHotelPaymentApi(
-        checkInDate: checkInDate,
-        checkOutDate: checkOutDate,
-        propertyId: propertyId,
-        guests: guests,
-        roomtype: roomtype,
-        roomIdAllotted: roomIdAllotted,
-        basePrice: basePrice,
-        taxFee: taxFee,
-        discountAmount: discountAmount,
-        totalAmount: totalAmount,
-        payPlan: payPlan,
-      );
+      late FInalPaymentModel result;
+      if (isHotel) {
+        result = await _serviceProvider.payFinalHotelPaymentApi(
+          checkInDate: checkInDate,
+          checkOutDate: checkOutDate,
+          propertyId: propertyId,
+          guests: guests,
+          roomtype: roomtype,
+          roomIdAllotted: roomIdAllotted,
+          basePrice: basePrice,
+          taxFee: taxFee,
+          discountAmount: discountAmount,
+          totalAmount: totalAmount,
+          payPlan: payPlan,
+        );
+      } else {
+        result = await _serviceProvider.payFinalPaymentApi(
+          checkInDate: checkInDate,
+          checkOutDate: checkOutDate,
+          propertyId: propertyId,
+          guests: guests,
+          roomtype: roomtype,
+          roomIdAllotted: roomIdAllotted,
+          basePrice: basePrice,
+          taxFee: taxFee,
+          discountAmount: discountAmount,
+          totalAmount: totalAmount,
+          payPlan: payPlan,
+        );
+      }
 
       return BookingResult(
         isSuccess: result.status == true,
@@ -49,14 +66,11 @@ class BookingService {
         error: result.status != true ? "Booking confirmation failed" : null,
       );
     } catch (e) {
-      return BookingResult(
-        isSuccess: false,
-        error: "Booking error: $e",
-      );
+      return BookingResult(isSuccess: false, error: "Booking error: $e");
     }
   }
 
-  Future<void> initiatePayment({
+  Future<PaymentInitiatedModel> initiatePayment({
     required int type,
     required int bookingId,
   }) async {
@@ -65,8 +79,10 @@ class BookingService {
         type: type,
         bookingId: bookingId,
       );
+      return paymentInitiatedModel;
     } catch (e) {
       print("Payment Initiated Error: $e");
+      return PaymentInitiatedModel();
     }
   }
 }

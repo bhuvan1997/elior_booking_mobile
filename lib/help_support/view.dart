@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:elior/widgets/app_button.dart';
+import 'package:elior/widgets/app_mobile_input.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -35,8 +36,8 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         _contactController.text.isEmpty ||
         _descriptionController.text.isEmpty) {
       Get.snackbar(
-        "Error",
-        "All fields are required!",
+        "error".tr,
+        "all_fields_required".tr,
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
       );
@@ -73,8 +74,8 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
       if (response.statusCode == 200) {
         Navigator.pop(context);
         Get.snackbar(
-          "Success",
-          "Support ticket submitted!",
+          "success".tr,
+          "support_ticket_submitted".tr,
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
@@ -86,8 +87,8 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
       } else {
         print(response.body);
         Get.snackbar(
-          "Failed",
-          "Something went wrong!",
+          "failed".tr,
+          "something_went_wrong".tr,
           backgroundColor: Colors.redAccent,
           colorText: Colors.white,
         );
@@ -96,8 +97,8 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
       setState(() => isLoading = false);
 
       Get.snackbar(
-        "Error",
-        "Unable to connect to server!",
+        "error".tr,
+        "unable_to_connect".tr,
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
       );
@@ -164,8 +165,8 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
             child: TextField(
               controller: _contactController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                hintText: "Enter number",
+              decoration: InputDecoration(
+                hintText: "enter_number".tr,
                 border: InputBorder.none,
               ),
             ),
@@ -191,7 +192,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: getAppBar(context, "Contact Us", centerTitle: false),
+      appBar: getAppBar(context, "contact_us".tr, centerTitle: false),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -212,7 +213,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
             right: 16,
             bottom: 16,
             child: AppButton(
-              title: "Submit Ticket",
+              title: "submit_ticket".tr,
               onTap: isLoading ? null : submitSupportTicket,
             ),
           ),
@@ -245,7 +246,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
           const SizedBox(height: 14),
 
           Text(
-            "Need Help?",
+            "need_help".tr,
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -255,7 +256,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
           const SizedBox(height: 6),
 
           Text(
-            "Tell us your issue and our team will get back to you shortly.",
+            "need_help_description".tr,
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 13,
@@ -276,7 +277,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -286,8 +287,8 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         children: [
           AppTextField(
             controller: _nameController,
-            label: "Full Name",
-            placeholder: "Enter your name",
+            label: "full_name".tr,
+            placeholder: "enter_your_name".tr,
             prefixIcon: const Icon(
               Icons.person_outline,
               color: AppTheme.appThemeColor,
@@ -298,8 +299,8 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
 
           AppTextField(
             controller: _emailController,
-            label: "Email Address",
-            placeholder: "Enter your email",
+            label: "email_address".tr,
+            placeholder: "enter_your_email".tr,
             keyboardType: TextInputType.emailAddress,
             prefixIcon: const Icon(
               Icons.email_outlined,
@@ -309,14 +310,15 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
 
           const SizedBox(height: 16),
 
+
           _buildPhoneField(),
 
           const SizedBox(height: 16),
 
           AppTextField(
             controller: _descriptionController,
-            label: "Message",
-            placeholder: "Describe your issue...",
+            label: "message".tr,
+            placeholder: "describe_your_issue".tr,
             maxLines: 5,
             prefixIcon: const Icon(
               Icons.chat_bubble_outline,
@@ -370,8 +372,8 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         Expanded(
           child: AppTextField(
             controller: _contactController,
-            label: "Phone Number",
-            placeholder: "Enter phone number",
+            label: "phone_number".tr,
+            placeholder: "enter_phone_number".tr,
             keyboardType: TextInputType.phone,
             prefixIcon: const Icon(
               Icons.phone_outlined,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:elior/app_values/app_theme.dart';
+import 'package:get/get.dart';
 
 class OffersCard extends StatelessWidget {
   final int couponCount;
@@ -18,9 +19,9 @@ class OffersCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Offers",
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+        Text(
+          "offers".tr,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         GestureDetector(
@@ -56,8 +57,8 @@ class OffersCard extends StatelessWidget {
                     children: [
                       Text(
                         appliedCouponName == null
-                            ? "View Offers"
-                            : "$appliedCouponName Applied",
+                            ? "view_offers".tr
+                            : "$appliedCouponName ${"coupon_applied".tr}",
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
@@ -66,8 +67,8 @@ class OffersCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         appliedCouponName == null
-                            ? "$couponCount coupons available"
-                            : "Tap to change coupon",
+                            ? "$couponCount ${"coupons_available".tr}"
+                            : "tap_to_change_coupon".tr,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,

@@ -48,8 +48,6 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
   String get _pageText2 => HotelHomePageUtils.getPageText2(slug ?? "");
   String get _searchText => HotelHomePageUtils.getSearchText(slug ?? "");
 
-
-
   @override
   void dispose() {
     checkInController.dispose();
@@ -175,9 +173,9 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
                                 child: AppTextField(
                                   onTap: () => _selectDate(context, isCheckIn: true),
                                   controller: checkInController,
-                                  placeholder: "Check-In",
+                                  placeholder: "check_in".tr,
                                   readOnly: true,
-                                  prefixIcon: Icon(
+                                  prefixIcon: const Icon(
                                     Icons.calendar_month_outlined,
                                   ),
                                 ),
@@ -187,9 +185,9 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
                                 child: AppTextField(
                                   onTap: () => _selectDate(context, isCheckIn: false),
                                   controller: checkOutController,
-                                  placeholder: "Check-Out",
+                                  placeholder: "check_out".tr,
                                   readOnly: true,
-                                  prefixIcon: Icon(
+                                  prefixIcon: const Icon(
                                     Icons.calendar_month_outlined,
                                   ),
                                 ),
@@ -200,25 +198,31 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
                           const SizedBox(height: 24),
 
                           AppButton(
-                            title: "Find",
+                            title: "find".tr,
                             onTap: () async {
                               if (controller.searchLocation.text
                                   .trim()
                                   .isEmpty) {
                                 Get.snackbar(
-                                  "Error",
-                                  "Please enter a location",
+                                  "error".tr,
+                                  "please_enter_location".tr,
                                 );
                                 return;
                               }
 
                               if (controller.checkInDate == null) {
-                                Get.snackbar("Error", "Select check-in date");
+                                Get.snackbar(
+                                  "error".tr,
+                                  "select_check_in_date".tr,
+                                );
                                 return;
                               }
 
                               if (controller.checkOutDate == null) {
-                                Get.snackbar("Error", "Select check-out date");
+                                Get.snackbar(
+                                  "error".tr,
+                                  "select_check_out_date".tr,
+                                );
                                 return;
                               }
 
@@ -235,8 +239,8 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
                                 Get.to(() => HotelHomeResultScreen(), arguments: args);
                               } else {
                                 Get.snackbar(
-                                  "Error",
-                                  "No hotels found",
+                                  "error".tr,
+                                  "no_hotels_found".tr,
                                   snackPosition: SnackPosition.BOTTOM,
                                 );
                               }
@@ -264,8 +268,8 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
     // Prevent opening checkout first
     if (!isCheckIn && controller.checkInDate == null) {
       Get.snackbar(
-        "Select Check-In First",
-        "Please select a check-in date before choosing check-out.",
+        "select_check_in_first".tr,
+        "select_check_in_first_msg".tr,
       );
       return;
     }
@@ -274,26 +278,13 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
 
     final picked = await showDatePicker(
       context: context,
-
-      // For check-in: initial date is today or current check-in date if exists
-      // For check-out: initial date is the selected check-in date
-
-
-
       initialDate: isCheckIn
           ? (controller.checkInDate ?? DateTime.now())
           : (controller.checkOutDate ?? initialCheckOutDate),
-
-      // For check-in: first available date is today
-      // For check-out: first available date is the selected check-in date
       firstDate: isCheckIn
           ? DateTime.now()
           : controller.checkInDate!,
-
       lastDate: DateTime(2100),
-
-      // Optional: Set initial date to check-in if user is selecting check-out
-      // and no check-out date is selected yet
       initialEntryMode: DatePickerEntryMode.calendar,
     );
 
@@ -304,8 +295,8 @@ class _HotelHomeSearchScreenState extends State<HotelHomeSearchScreen> {
     // Additional validation: Check-out must be after check-in
     if (!isCheckIn && picked.isBefore(controller.checkInDate!)) {
       Get.snackbar(
-        "Invalid Date",
-        "Check-out date cannot be before check-in date. Please select a date after ${DateFormat('dd MMM yyyy').format(controller.checkInDate!)}",
+        "invalid_date".tr,
+        "checkout_must_be_after".tr,
       );
       return;
     }

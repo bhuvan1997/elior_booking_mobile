@@ -175,7 +175,7 @@ class _UnifiedPropertyDetailsScreenState
   }
 
   String formatTime(String? time) {
-    if (time == null || time.isEmpty) return 'N/A';
+    if (time == null || time.isEmpty) return 'n_a'.tr;
     try {
       final parsed = DateFormat("HH:mm:ss").parse(time);
       return DateFormat("hh:mm a").format(parsed);
@@ -190,10 +190,10 @@ class _UnifiedPropertyDetailsScreenState
 
   void shareProperty(String name, String city, String link) {
     Share.share(
-      "Check out this property on Elior Booking!\n\n"
-      "🏨 $name\n📍 $city\n\n"
-      "$link",
-      subject: "Share Property",
+      "${"share_property_message".tr}\n\n"
+          "🏨 $name\n📍 $city\n\n"
+          "$link",
+      subject: "share_property".tr,
     );
   }
 
@@ -211,7 +211,7 @@ class _UnifiedPropertyDetailsScreenState
         backgroundColor: Colors.white,
         body: Center(
           child: Text(
-            "Property details not found".tr,
+            "property_details_not_found".tr,
             style: const TextStyle(fontSize: 16),
           ),
         ),
@@ -223,7 +223,6 @@ class _UnifiedPropertyDetailsScreenState
 
   Widget buildPropertyDetailUI() {
     final themeColor = getThemeColor();
-    final isHotel = widget.slug == "hotel";
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -232,7 +231,7 @@ class _UnifiedPropertyDetailsScreenState
         propertyName ?? "",
         isSubtext: true,
         subtext:
-            "${formatDate(LocalStorages().getCheckIn())} - ${formatDate(LocalStorages().getCheckOut())}",
+        "${formatDate(LocalStorages().getCheckIn())} - ${formatDate(LocalStorages().getCheckOut())}",
         centerTitle: false,
         trailing: [
           GestureDetector(
@@ -251,7 +250,7 @@ class _UnifiedPropertyDetailsScreenState
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
         child: AppButton(
-          title: "Select Rooms",
+          title: "select_rooms".tr,
           onTap: () {
             _showDateSelectionBottomSheet(context);
           },
@@ -347,7 +346,7 @@ class _UnifiedPropertyDetailsScreenState
                     Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
                     const SizedBox(width: 4),
                     Text(
-                      "Check-In: ${formatTime(propertyCheckInTime)} | Check-out: ${formatTime(propertyCheckOutTime)}",
+                      "${"check_in_label".tr} ${formatTime(propertyCheckInTime)} | ${"check_out_label".tr} ${formatTime(propertyCheckOutTime)}",
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
@@ -356,13 +355,13 @@ class _UnifiedPropertyDetailsScreenState
                 const SizedBox(height: 10),
 
                 // Description
-                const Text(
-                  'About the Property',
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                Text(
+                  'about_the_property'.tr,
+                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  propertyDescription ?? "No description available",
+                  propertyDescription ?? "no_description_available".tr,
                   maxLines: isDescriptionExpanded ? null : 2,
                   overflow: isDescriptionExpanded
                       ? TextOverflow.visible
@@ -376,7 +375,7 @@ class _UnifiedPropertyDetailsScreenState
                     });
                   },
                   child: Text(
-                    isDescriptionExpanded ? "View Less" : "View More",
+                    isDescriptionExpanded ? "view_less".tr : "view_more".tr,
                     style: GoogleFonts.poppins(
                       color: themeColor,
                       fontSize: 12,
@@ -387,92 +386,11 @@ class _UnifiedPropertyDetailsScreenState
 
                 const SizedBox(height: 20),
 
-                // Price
-                if (propertyPricePerNight != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: themeColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: themeColor.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Price per Night",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          "${propertyCurrency ?? ""} ${propertyPricePerNight ?? 0}",
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: themeColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
-
-                // Contact Info
-                if (propertyPhone != null || propertyEmail != null) ...[
-                  Text(
-                    'Contact Info'.tr,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: themeColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: themeColor.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.phone_outlined, color: themeColor),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                propertyPhone ?? "N/A",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                propertyEmail ?? "N/A",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
-
                 // Facilities
                 if (propertyFacilities != null &&
                     propertyFacilities!.isNotEmpty) ...[
                   Text(
-                    "Facilities".tr,
+                    "facilities".tr,
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -486,8 +404,8 @@ class _UnifiedPropertyDetailsScreenState
                     itemCount: isFacilitiesExpanded
                         ? propertyFacilities!.length
                         : (propertyFacilities!.length > 4
-                              ? 4
-                              : propertyFacilities!.length),
+                        ? 4
+                        : propertyFacilities!.length),
                     itemBuilder: (context, index) {
                       final facility = propertyFacilities![index];
                       return Row(
@@ -523,7 +441,7 @@ class _UnifiedPropertyDetailsScreenState
                       child: Padding(
                         padding: const EdgeInsets.only(top: 6),
                         child: Text(
-                          "View All",
+                          "view_all".tr,
                           style: GoogleFonts.poppins(
                             color: themeColor,
                             fontSize: 14,
@@ -538,7 +456,7 @@ class _UnifiedPropertyDetailsScreenState
                 // Rules
                 if (propertyRules != null && propertyRules!.isNotEmpty) ...[
                   Text(
-                    "Property Rules & Information".tr,
+                    "property_rules_information".tr,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -552,8 +470,8 @@ class _UnifiedPropertyDetailsScreenState
                     itemCount: isRulesExpanded
                         ? propertyRules!.length
                         : (propertyRules!.length > 4
-                              ? 4
-                              : propertyRules!.length),
+                        ? 4
+                        : propertyRules!.length),
                     itemBuilder: (context, index) {
                       final rule = propertyRules![index];
                       return Row(
@@ -591,7 +509,7 @@ class _UnifiedPropertyDetailsScreenState
                       child: Padding(
                         padding: EdgeInsets.only(top: 6),
                         child: Text(
-                          "View All",
+                          "view_all".tr,
                           style: GoogleFonts.poppins(
                             color: themeColor,
                             fontSize: 14,
@@ -606,7 +524,7 @@ class _UnifiedPropertyDetailsScreenState
                 // Gallery
                 if (propertyImages != null && propertyImages!.isNotEmpty) ...[
                   Text(
-                    'Gallery'.tr,
+                    'gallery'.tr,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -619,23 +537,36 @@ class _UnifiedPropertyDetailsScreenState
                       itemCount: propertyImages!.length,
                       scrollDirection: Axis.horizontal,
                       itemBuilder: (context, index) {
-                        return Container(
-                          width: 100,
-                          margin: const EdgeInsets.only(right: 10),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              propertyImages![index],
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: const Icon(
-                                    Icons.broken_image,
-                                    color: Colors.grey,
-                                  ),
-                                );
-                              },
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => FullScreenGalleryViewer(
+                                  images: propertyImages!,
+                                  initialIndex: index,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: 100,
+                            margin: const EdgeInsets.only(right: 10),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                propertyImages![index],
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(
+                                      Icons.broken_image,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
                         );
@@ -652,10 +583,10 @@ class _UnifiedPropertyDetailsScreenState
   }
 
   void _showRulesBottomSheet(
-    BuildContext context,
-    List<String> rules,
-    Color themeColor,
-  ) {
+      BuildContext context,
+      List<String> rules,
+      Color themeColor,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -682,7 +613,7 @@ class _UnifiedPropertyDetailsScreenState
                 ),
               ),
               Text(
-                "All Property Rules & Info",
+                "all_property_rules_info".tr,
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -721,10 +652,10 @@ class _UnifiedPropertyDetailsScreenState
   }
 
   void _showFacilitiesBottomSheet(
-    BuildContext context,
-    List<String> facilities,
-    Color themeColor,
-  ) {
+      BuildContext context,
+      List<String> facilities,
+      Color themeColor,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -751,7 +682,7 @@ class _UnifiedPropertyDetailsScreenState
                 ),
               ),
               Text(
-                "All Facilities",
+                "all_facilities".tr,
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -798,7 +729,7 @@ class _UnifiedPropertyDetailsScreenState
         DateTime.tryParse(LocalStorages().getCheckIn() ?? "") ?? DateTime.now();
     DateTime checkOut =
         DateTime.tryParse(LocalStorages().getCheckOut() ?? "") ??
-        DateTime.now().add(const Duration(days: 1));
+            DateTime.now().add(const Duration(days: 1));
 
     final themeColor = getThemeColor();
 
@@ -830,7 +761,7 @@ class _UnifiedPropertyDetailsScreenState
                     ),
                   ),
                   Text(
-                    "Select Check-In & Check-Out Dates",
+                    "select_check_in_out_dates".tr,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -879,7 +810,7 @@ class _UnifiedPropertyDetailsScreenState
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Check-In",
+                                  "check_in".tr,
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -943,7 +874,7 @@ class _UnifiedPropertyDetailsScreenState
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Check-Out",
+                                  "check_out".tr,
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -971,7 +902,7 @@ class _UnifiedPropertyDetailsScreenState
 
                   // Confirm Button
                   AppButton(
-                    title: "Confirm & Select Rooms",
+                    title: "confirm_select_rooms".tr,
                     onTap: () {
                       LocalStorages().saveCheckIn(
                         checkIn: DateFormat("yyyy-MM-dd").format(checkIn),
@@ -1025,9 +956,9 @@ class _UnifiedPropertyDetailsScreenState
 
 class HotelTranslator {
   static Future<void> translateHotels(
-    List<Datas> hotels,
-    String langCode,
-  ) async {
+      List<Datas> hotels,
+      String langCode,
+      ) async {
     final translator = TranslationService();
 
     for (var hotel in hotels) {
@@ -1065,9 +996,9 @@ class HotelTranslator {
 
 class HomestayTranslator {
   static Future<void> translateHomestays(
-    List<UnifiedData> homestays,
-    String langCode,
-  ) async {
+      List<UnifiedData> homestays,
+      String langCode,
+      ) async {
     final translator = TranslationService();
 
     for (var homestay in homestays) {
@@ -1098,5 +1029,140 @@ class HomestayTranslator {
         homestay.translatedFacilities = "";
       }
     }
+  }
+}
+
+class FullScreenGalleryViewer extends StatefulWidget {
+  final List<String> images;
+  final int initialIndex;
+
+  const FullScreenGalleryViewer({
+    super.key,
+    required this.images,
+    required this.initialIndex,
+  });
+
+  @override
+  State<FullScreenGalleryViewer> createState() =>
+      _FullScreenGalleryViewerState();
+}
+
+class _FullScreenGalleryViewerState
+    extends State<FullScreenGalleryViewer> {
+  late final PageController _pageController;
+  late int currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    currentIndex = widget.initialIndex;
+
+    _pageController = PageController(
+      initialPage: widget.initialIndex,
+    );
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: widget.images.length,
+            onPageChanged: (index) {
+              setState(() {
+                currentIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return InteractiveViewer(
+                minScale: 0.8,
+                maxScale: 5,
+                child: Center(
+                  child: Hero(
+                    tag: widget.images[index],
+                    child: Image.network(
+                      widget.images[index],
+                      fit: BoxFit.fitWidth,
+                      loadingBuilder:
+                          (context, child, progress) {
+                        if (progress == null) return child;
+
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        );
+                      },
+                      errorBuilder:
+                          (context, error, stackTrace) {
+                        return const Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            color: Colors.white,
+                            size: 60,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+
+          /// Top Bar
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 10,
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius:
+                      BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      "${currentIndex + 1}/${widget.images.length}",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

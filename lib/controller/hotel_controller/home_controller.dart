@@ -1,3 +1,4 @@
+import 'package:elior/network/api_constants.dart';
 import 'package:elior/response_model/home_stay_respnse/homestay_suggestion_response.dart';
 import 'package:elior/response_model/property/property_search_response.dart';
 import 'package:elior/response_model/search_hotel_response.dart';
@@ -89,9 +90,18 @@ class HomeController extends GetxController {
             suggestions = [];
           }
         } else {
-          final response = await ServiceProvider().fetchHomestaysSuggestions(query);
-          HomestaySuggestionResponse data = response;
-          suggestions = data.suggestions?.map((e) => HomestaySuggestion.fromJson(e)).toList() ?? [];
+          // final response = await ServiceProvider().fetchHomestaysSuggestions(query);
+          final response = await http.get(
+            Uri.parse(
+              ApiConstants.homestaySuggestions(query),
+            ),
+          );
+          if (response.statusCode == 200) {
+            List data = jsonDecode(response.body);
+            suggestions = data.map((e) => HomestaySuggestion.fromJson(e)).toList();
+          } else {
+            suggestions = [];
+          }
         }
       } catch (e) {
         suggestions = [];

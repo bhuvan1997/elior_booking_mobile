@@ -1,6 +1,8 @@
 import 'package:elior/response_model/bus_ticket_history_model.dart';
+import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import 'bus_review_screen.dart';
@@ -60,168 +62,145 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
     final reviewList = bookingHistoryDetails.data?.review;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: booking == null
-            ? const Text("Ticket details")
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Ticket details",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "Ticket #${booking.bookingNo ?? ""}",
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                ],
-              ),
+      appBar: getAppBar(
+        context,
+        "ticket_details".tr,
+        subtext: "${"ticket_hash".tr}${booking?.bookingNo ?? ""}",
+        isSubtext: true,
+        centerTitle: false,
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : booking == null
-          ? const Center(child: Text("No Ticket Found"))
+      body: booking == null
+          ? Center(child: Text("no_ticket_found".tr))
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  TicketCard(booking: booking),
-                  const SizedBox(height: 20),
-                  if (reviewList == null || reviewList.isEmpty) ...[
-                    /// Show Write Review Button
-                    Container(
-                      width: Get.width,
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: Colors.white,
-                        boxShadow: const [
-                          BoxShadow(
-                            blurRadius: 8,
-                            offset: Offset(0, 3),
-                            color: Color(0x22000000),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            "Let us know about your trip",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          SizedBox(
-                            width: 170,
-                            height: 48,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2D8CFF),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              onPressed: () {
-                                Get.to(
-                                  BusReviewScreen(bookingId: booking?.bookingId ?? 0),
-                                );
-                              },
-                              child: const Text(
-                                "WRITE A REVIEW",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 20,)
-                        ],
-                      ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TicketCard(booking: booking),
+            const SizedBox(height: 20),
+            if (reviewList == null || reviewList.isEmpty) ...[
+              /// Show Write Review Button
+              Container(
+                width: Get.width,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white,
+                  boxShadow: const [
+                    BoxShadow(
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                      color: Color(0x22000000),
                     ),
-
-                  ] else ...[
-                    /// Already Reviewed Section
-                    const Text(
-                      "Your Review",
-                      style: TextStyle(
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      "let_us_know_trip".tr,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 12),
 
-                    _card(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          /// ⭐ Stars
-                          Row(
-                            children: List.generate(
-                              reviewList.first.rating ?? 0,
-                              (index) => const Icon(
-                                Icons.star,
-                                size: 22,
-                                color: Color(0xFFFFB400),
-                              ),
-                            ),
+                    SizedBox(
+                      width: 170,
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2D8CFF),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-
-                          const SizedBox(height: 10),
-
-                          /// Title
-                          Text(
-                            reviewList.first.title ?? "",
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
+                        ),
+                        onPressed: () {
+                          Get.to(
+                            BusReviewScreen(
+                              bookingId: booking?.bookingId ?? 0,
                             ),
+                          );
+                        },
+                        child: Text(
+                          "write_a_review".tr,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
                           ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ] else ...[
+              /// Already Reviewed Section
+              Text(
+                "your_review".tr,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
 
-                          const SizedBox(height: 6),
+              _card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// ⭐ Stars
+                    Row(
+                      children: List.generate(
+                        reviewList.first.rating ?? 0,
+                            (index) => const Icon(
+                          Icons.star,
+                          size: 22,
+                          color: Color(0xFFFFB400),
+                        ),
+                      ),
+                    ),
 
-                          /// Comment
-                          Text(
-                            reviewList.first.review ?? "",
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF555555),
-                              height: 1.4,
-                            ),
-                          ),
+                    const SizedBox(height: 10),
 
-                          const SizedBox(height: 10),
+                    /// Title
+                    Text(
+                      reviewList.first.title ?? "",
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
 
-                          const Text(
-                            "Already Reviewed",
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 6),
+
+                    /// Comment
+                    Text(
+                      reviewList.first.review ?? "",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF555555),
+                        height: 1.4,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Text(
+                      "already_reviewed".tr,
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -282,21 +261,21 @@ class TicketCard extends StatelessWidget {
 
                       /// Trip Completed Row
                       Row(
-                        children: const [
-                          Expanded(child: Divider(color: Colors.grey)),
-                          SizedBox(width: 8),
-                          Icon(
+                        children: [
+                          const Expanded(child: Divider(color: Colors.grey)),
+                          const SizedBox(width: 8),
+                          const Icon(
                             Icons.directions_bus,
                             color: Colors.white,
                             size: 16,
                           ),
-                          SizedBox(width: 4),
+                          const SizedBox(width: 4),
                           Text(
-                            "Trip Completed",
-                            style: TextStyle(color: Colors.white, fontSize: 12),
+                            "trip_completed".tr,
+                            style: const TextStyle(color: Colors.white, fontSize: 12),
                           ),
-                          SizedBox(width: 8),
-                          Expanded(child: Divider(color: Colors.grey)),
+                          const SizedBox(width: 8),
+                          const Expanded(child: Divider(color: Colors.grey)),
                         ],
                       ),
 
@@ -352,7 +331,7 @@ class TicketCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         "${booking.busType ?? ""} / ${booking.registrationNo ?? ""}",
-                        style: const TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 13,
                           color: Colors.grey,
                         ),
@@ -366,30 +345,30 @@ class TicketCard extends StatelessWidget {
 
                 /// Passengers
                 ...booking.passengersFormatted
-                        ?.map(
-                          (p) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Text(
-                              p.text ?? "",
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ),
-                        )
-                        .toList() ??
+                    ?.map(
+                      (p) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Text(
+                      p.text ?? "",
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                )
+                    .toList() ??
                     [],
 
                 const Divider(),
                 const SizedBox(height: 10),
 
-                _detailRow("PNR", booking.bookingNo),
-                Divider(),
-                _detailRow("Bus number", booking.registrationNo),
-                Divider(),
+                _detailRow("pnr".tr, booking.bookingNo),
+                const Divider(),
+                _detailRow("bus_number".tr, booking.registrationNo),
+                const Divider(),
 
-                _detailRow("Payment Gateway", booking.gateway),
-                Divider(),
+                _detailRow("payment_gateway".tr, booking.gateway),
+                const Divider(),
 
-                _detailRow("Transaction Id", booking.gatewayTransactionId),
+                _detailRow("transaction_id".tr, booking.gatewayTransactionId),
               ],
             ),
           ),
@@ -507,15 +486,15 @@ class RatingCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "You rated this trip",
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          Text(
+            "you_rated_this_trip".tr,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 10),
           Row(
             children: List.generate(
               5,
-              (index) => Icon(
+                  (index) => Icon(
                 index < (review.rating ?? 0) ? Icons.star : Icons.star_border,
                 color: Colors.amber,
               ),

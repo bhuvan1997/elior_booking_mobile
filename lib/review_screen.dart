@@ -1,9 +1,24 @@
 import 'package:elior/hotel_booking/bottom_navigation_screen.dart';
+import 'package:elior/widgets/app_button.dart';
+import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
+import 'app_values/app_theme.dart';
 import 'network/service_provider.dart';
+
+// ── Palette ──────────────────────────────────────────────────────────────────
+var _amber = AppTheme.appThemeColor;
+const _amberSoft = Color(0xFFFFF4E5);
+var _starFilled = AppTheme.appThemeColor;
+const _starEmpty = Color(0xFFE0E0E0);
+const _surface = Color(0xFFF7F7F7);
+const _border = Color(0xFFEAEAEA);
+const _textPrimary = Color(0xFF1A1A1A);
+const _textSecondary = Color(0xFF7A7A7A);
+
+// ── Label copy for each star count ───────────────────────────────────────────
+const _ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
 
 class ReviewScreen extends StatefulWidget {
   final int bookingId;
@@ -15,288 +30,296 @@ class ReviewScreen extends StatefulWidget {
 }
 
 class _ReviewScreenState extends State<ReviewScreen> {
-  int selectedIndex = 0;
-  int rating = 0;
-  bool isLoading = false;
+  int _selectedChip = 0;
+  int _rating = 0;
+  bool _isLoading = false;
 
-  final TextEditingController reviewController = TextEditingController();
+  final _reviewController = TextEditingController();
 
-  final List<String> reviewOptions = [
-    "Great Stay, Worth the Money",
-    "Average Experience, Could Be Better",
-    "Comfortable Room & Good Service",
-    "Not Worth the Price",
-    "Disappointed with Cleanliness",
+  static const _chips = [
+    'Great Stay, Worth the Money',
+    'Average Experience, Could Be Better',
+    'Comfortable Room & Good Service',
+    'Not Worth the Price',
+    'Disappointed with Cleanliness',
   ];
 
-  Future<bool> reviewApi({
-    required int id,
-    required int star,
-    required String title,
-    required String review,
-  }) async {
+  @override
+  void dispose() {
+    _reviewController.dispose();
+    super.dispose();
+  }
+
+  // ── API call ────────────────────────────────────────────────────────────────
+
+  Future<bool> _submitReview() async {
     try {
-      setState(() => isLoading = true);
+      setState(() => _isLoading = true);
 
       final response = await ServiceProvider().review(
-        bookingId: id,
-        starRating: star,
-        title: title,
-        review: review,
+        bookingId: widget.bookingId,
+        starRating: _rating,
+        title: _chips[_selectedChip],
+        review: _reviewController.text.trim(),
       );
 
-      setState(() => isLoading = false);
+      if (response.status == true) return true;
 
-      /// assuming your API returns status true/false
-      if (response.status == true) {
-        return true;
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.message ?? "Something went wrong")),
-        );
-        return false;
-      }
-    } catch (e) {
-      setState(() => isLoading = false);
-      debugPrint("Error : $e");
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
-
+      _showSnack(response.message ?? 'Something went wrong');
       return false;
+    } catch (e) {
+      debugPrint('ReviewScreen error: $e');
+      _showSnack('Something went wrong');
+      return false;
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
-  bool validateForm() {
-    if (rating == 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Please select rating")));
+  // ── Validation ──────────────────────────────────────────────────────────────
+
+  bool _validate() {
+    if (_rating == 0) {
+      _showSnack('Please select a rating');
       return false;
     }
-
-    if (selectedIndex < 0 || selectedIndex >= reviewOptions.length) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select review title")),
-      );
+    final text = _reviewController.text.trim();
+    if (text.isEmpty) {
+      _showSnack('Please write your review');
       return false;
     }
-
-    if (reviewController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Please write your review")));
+    if (text.length < 10) {
+      _showSnack('Review must be at least 10 characters');
       return false;
     }
-
-    if (reviewController.text.trim().length < 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Review must be at least 10 characters")),
-      );
-      return false;
-    }
-
     return true;
   }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  Future<void> _onSubmit() async {
+    if (!_validate()) return;
+    if (await _submitReview()) Get.offAll(BottomBarScreen());
+  }
+
+  // ── Build ───────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "Review",
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
+      backgroundColor: Colors.white,
+      appBar: getAppBar(context, 'Review', centerTitle: false),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-
-            const Text(
-              "How was your stay\nexperience?",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            const SizedBox(height: 28),
+            _buildHeader(),
+            const SizedBox(height: 24),
+            _buildStarRating(),
+            const SizedBox(height: 32),
+            _buildSectionLabel('Select your review'),
+            const SizedBox(height: 12),
+            _buildChips(),
+            const SizedBox(height: 28),
+            _buildSectionLabel('Write a detailed review'),
+            const SizedBox(height: 12),
+            _buildTextArea(),
+            const SizedBox(height: 32),
+            AppButton(
+              title: 'Submit Review',
+              onTap: _isLoading ? null : _onSubmit,
             ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
 
-            const SizedBox(height: 10),
+  // ── Sub-widgets ─────────────────────────────────────────────────────────────
 
-            /// ⭐ Rating
-            Row(
-              children: List.generate(5, (index) {
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'How was your stay?',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: _textPrimary,
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Your feedback helps us improve for everyone.',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: _textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStarRating() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+      decoration: BoxDecoration(
+        color: _rating > 0 ? _amberSoft : _surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: _rating > 0 ? _amber.withValues(alpha: 0.3) : _border,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Stars
+          Expanded(
+            child: Row(
+              children: List.generate(5, (i) {
+                final filled = i < _rating;
                 return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      rating = index + 1;
-                    });
-                  },
+                  onTap: () => setState(() => _rating = i + 1),
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Icon(
-                      Icons.star,
-                      size: 30,
-                      color: index < rating
-                          ? const Color(0xFFFFB400)
-                          : const Color(0xFFD9D9D9),
+                    padding: const EdgeInsets.only(right: 10),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        filled ? Icons.star_rounded : Icons.star_outline_rounded,
+                        key: ValueKey(filled),
+                        size: 36,
+                        color: filled ? _starFilled : _starEmpty,
+                      ),
                     ),
                   ),
                 );
               }),
             ),
-
-            const SizedBox(height: 20),
-
-            const Text(
-              "Select your Review",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-
-            const SizedBox(height: 10),
-
-            /// Chips
-            ...List.generate(reviewOptions.length, (index) {
-              final bool isSelected = selectedIndex == index;
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedIndex = index;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFFFFF4E5)
-                          : const Color(0xFFEDEDED),
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFFFF9800)
-                            : Colors.transparent,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      reviewOptions[index],
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected
-                            ? const Color(0xFFFF9800)
-                            : Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
-
-            const SizedBox(height: 20),
-
-            const Text(
-              "Write a detailed review of your stay",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-
-            const SizedBox(height: 10),
-
-            Container(
-              padding: const EdgeInsets.all(16),
+          ),
+          // Rating label
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: _rating > 0
+                ? Container(
+              key: ValueKey(_rating),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 6,
+              ),
               decoration: BoxDecoration(
-                color: const Color(0xFFF2F2F2),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE0E0E0)),
+                color: _amber,
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: reviewController,
-                    maxLines: 5,
-                    maxLength: 300,
-                    decoration: const InputDecoration(
-                      hintText:
-                          "Tell us more about your stay such as location, food, amenities, service etc.",
-                      border: InputBorder.none,
-                      counterText: "",
-                    ),
-                    onChanged: (value) {
-                      setState(() {});
-                    },
-                  ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Text(
-                      "${reviewController.text.length}/300",
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            /// SUBMIT BUTTON
-            GestureDetector(
-              onTap: isLoading
-                  ? null
-                  : () async {
-                      if (!validateForm()) return;
-
-                      final success = await reviewApi(
-                        id: widget.bookingId,
-                        star: rating,
-                        title: reviewOptions[selectedIndex],
-                        review: reviewController.text.trim(),
-                      );
-
-                      if (success) {
-                        Get.offAll(BottomBarScreen());
-                      }
-                    },
-              child: Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFF9800),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          "Submit",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
+              child: Text(
+                _ratingLabels[_rating],
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
+            )
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
 
-            const SizedBox(height: 20),
-          ],
-        ),
+  Widget _buildSectionLabel(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        color: _textPrimary,
+      ),
+    );
+  }
+
+  Widget _buildChips() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: List.generate(_chips.length, (i) {
+        final selected = _selectedChip == i;
+        return GestureDetector(
+          onTap: () => setState(() => _selectedChip = i),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: selected ? _amberSoft : _surface,
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: selected ? _amber : _border,
+                width: 1.5,
+              ),
+            ),
+            child: Text(
+              _chips[i],
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: selected ? _amber : _textSecondary,
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildTextArea() {
+    return Container(
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _reviewController,
+            maxLines: 6,
+            maxLength: 300,
+            onChanged: (_) => setState(() {}),
+            cursorColor: _amber,
+            style: const TextStyle(fontSize: 14, color: _textPrimary),
+            decoration: InputDecoration(
+              hintText:
+              'Tell us about the location, food, amenities, service…',
+              hintStyle: const TextStyle(color: _textSecondary, fontSize: 14),
+              counterText: '',
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 14, bottom: 10),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${_reviewController.text.length} / 300',
+                style: const TextStyle(fontSize: 12, color: _textSecondary),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

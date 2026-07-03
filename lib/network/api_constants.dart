@@ -32,8 +32,8 @@ class ApiConstants {
   static const accomendationId = '$baseUrl/book-homestay-accomodation-by-id';
   static const proceedApi =
       'https://eliorbooking.com/api/proceed-select-seats-points';
-  static const finalPaymentApi = '$baseUrl/pay-homestay-booking-by-id';
-  static const finalHotelApi = '$baseUrl/pay-hotel-booking-by-id';
+  static const finalHomeApi = '$baseUrl/pay-homestay-booking-by-id';
+  static const finalHotelApi = '$baseUrl/pay-hotel-booking-by-id'; //1
   static const selectMyFav = '$baseUrl/select-my-favourites';
   static const getMyFav = '$baseUrl/get-my-favourites';
   static const removeFav = '$baseUrl/remove-my-favourites';
@@ -42,5 +42,6 @@ class ApiConstants {
   static const getMyNotification = '$baseUrl/get-my-notification';
   static const getAllCoupons = '$baseUrl/get-all-coupons';
   static const getNearbyProperties = '$baseUrl/get-properties-nearby';
+  static const getBudgetFriendlyHomestays = '$baseUrl/budget-friendly-homestays';
 
 }

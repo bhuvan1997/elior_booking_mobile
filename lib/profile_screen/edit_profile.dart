@@ -6,6 +6,7 @@ import 'package:elior/hotel_booking/bottom_navigation_screen.dart';
 import 'package:elior/widgets/app_button.dart';
 import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get_utils/src/extensions/internacionalization.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -81,7 +82,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         if (data["profile_image"] != null) {
           apiImageUrl =
-              "https://eliorbooking.com/public/uploads/profile/${data['profile_image']}";
+          "https://eliorbooking.com/public/uploads/profile/${data['profile_image']}";
 
           /// IMPORTANT – Save the API URL locally
           LocalStorages().saveProfileImage(apiImageUrl!);
@@ -147,7 +148,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         LocalStorages().saveDob(dob: dobCtrl.text);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile updated successfully!")),
+          SnackBar(content: Text("profile_updated_success".tr)),
         );
 
         Navigator.pushReplacement(
@@ -162,7 +163,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      ).showSnackBar(SnackBar(content: Text("${"error_label".tr}: $e")));
     } finally {
       setState(() => isLoading = false); // STOP LOADER
     }
@@ -204,13 +205,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: getAppBar(context, "Edit Profile", centerTitle: false),
+      appBar: getAppBar(context, "edit_profile".tr, centerTitle: false),
       body: Stack(
         children: [
           SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 100),
             child: Column(
               children: [
+                const SizedBox(height: 20),
                 _buildHeader(),
 
                 const SizedBox(height: 24),
@@ -224,7 +226,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             left: 16,
             right: 16,
             bottom: 16,
-            child: AppButton(title: "Update Profile", onTap: isLoading ? null : submitForm,),
+            child: AppButton(title: "update_profile".tr, onTap: isLoading ? null : submitForm,),
           ),
         ],
       ),
@@ -322,8 +324,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         children: [
           AppTextField(
             controller: nameCtrl,
-            label: "Full Name",
-            placeholder: "Enter your full name",
+            label: "full_name".tr,
+            placeholder: "enter_your_full_name".tr,
             prefixIcon: const Icon(
               Icons.person_outline,
               color: AppTheme.appThemeColor,
@@ -334,8 +336,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
           AppTextField(
             controller: emailCtrl,
-            label: "Email Address",
-            placeholder: "Enter your email",
+            label: "email_address".tr,
+            placeholder: "enter_your_email".tr,
             keyboardType: TextInputType.emailAddress,
             prefixIcon: const Icon(
               Icons.email_outlined,
@@ -351,8 +353,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
           AppTextField(
             controller: dobCtrl,
-            label: "Date of Birth",
-            placeholder: "Select date of birth",
+            label: "date_of_birth".tr,
+            placeholder: "select_date_of_birth".tr,
             readOnly: true,
             onTap: _selectDob,
             prefixIcon: const Icon(
@@ -365,8 +367,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
           AppTextField(
             controller: addressCtrl,
-            label: "Address",
-            placeholder: "Enter your address",
+            label: "address".tr,
+            placeholder: "enter_your_address".tr,
             maxLines: 3,
             prefixIcon: const Icon(
               Icons.location_on_outlined,
@@ -422,8 +424,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         Expanded(
           child: AppTextField(
             controller: mobileCtrl,
-            label: "Mobile Number",
-            placeholder: "Enter mobile number",
+            label: "mobile_number".tr,
+            placeholder: "enter_mobile_number".tr,
             keyboardType: TextInputType.phone,
             prefixIcon: const Icon(
               Icons.phone_outlined,

@@ -1,8 +1,15 @@
+import 'package:dotted_border/dotted_border.dart';
+import 'package:dotted_line/dotted_line.dart';
+import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/response_model/booking_history_details.dart';
 import 'package:elior/review_screen.dart';
+import 'package:elior/utils/project_utils.dart';
+import 'package:elior/widgets/app_button.dart';
+import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import 'network/service_provider.dart';
@@ -64,27 +71,8 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
         : null;
     final reviewList = bookingHistoryDetails.data?.review;
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "Trip Completed",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : booking == null
+      appBar: getAppBar(context, booking?.status == "Completed" ? "Trip Completed" : "Trip Confirmed", centerTitle: false),
+      body: booking == null
           ? const Center(child: Text("No Booking Details Found"))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -94,15 +82,18 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                   /// PROPERTY NAME
                   Text(
                     booking.propertyName ?? "",
-                    style: const TextStyle(
+                    style: GoogleFonts.poppins(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     "You have completed your trip. We hope you had a pleasant stay!",
-                    style: TextStyle(fontSize: 14, color: Color(0xFF777777)),
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: const Color(0xFF777777),
+                    ),
                   ),
                   const SizedBox(height: 16),
 
@@ -113,7 +104,7 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE9EEF3),
+                      color: AppTheme.appThemeColor.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
@@ -123,6 +114,7 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                             "Booking ID - ${booking.bookingNo ?? ""}",
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
+                              color: AppTheme.white,
                               fontSize: 14,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -139,21 +131,17 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                               ),
                             );
                           },
-                          child: const Row(
+                          child: Row(
                             children: [
                               Text(
                                 "Copy",
-                                style: TextStyle(
-                                  color: Color(0xFF2D8CFF),
+                                style: GoogleFonts.poppins(
+                                  color: AppTheme.white,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                               SizedBox(width: 6),
-                              Icon(
-                                Icons.copy,
-                                size: 18,
-                                color: Color(0xFF2D8CFF),
-                              ),
+                              Icon(Icons.copy, size: 18, color: AppTheme.white),
                             ],
                           ),
                         ),
@@ -174,36 +162,18 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    SizedBox(
-                      width: 170,
-                      height: 48,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2D8CFF),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () {
-                          Get.to(
-                            ReviewScreen(bookingId: booking?.bookingId ?? 0),
-                          );
-                        },
-                        child: const Text(
-                          "WRITE A REVIEW",
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                    AppButton(
+                      title: "WRITE A REVIEW",
+                      isOutlined: true,
+                      onTap: () {
+                        Get.to(ReviewScreen(bookingId: booking.bookingId ?? 0));
+                      },
                     ),
                   ] else ...[
                     /// Already Reviewed Section
-                    const Text(
+                    Text(
                       "Your Review",
-                      style: TextStyle(
+                      style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
@@ -221,7 +191,7 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                               (index) => const Icon(
                                 Icons.star,
                                 size: 22,
-                                color: Color(0xFFFFB400),
+                                color: AppTheme.appThemeColor,
                               ),
                             ),
                           ),
@@ -231,7 +201,7 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                           /// Title
                           Text(
                             reviewList.first.title ?? "",
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                             ),
@@ -242,7 +212,7 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                           /// Comment
                           Text(
                             reviewList.first.review ?? "",
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 14,
                               color: Color(0xFF555555),
                               height: 1.4,
@@ -265,145 +235,137 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                   SizedBox(height: 24),
 
                   /// BOOKING DETAILS CARD
+                  Text(
+                    "Booking Details",
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
                   _card(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        /// Header
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [
-                            Text(
-                              "Booking Details",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              "Download Invoice",
-                              style: TextStyle(
-                                color: Colors.blue,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
                         /// Property Info
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: getImage(
+                                height: 80,
+                                width: 90,
+                                url: booking.images!.first,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     booking.propertyName ?? "",
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w400,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      color: AppTheme.black,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   // const SizedBox(height: 4),
                                   Text(
                                     booking.propertyAddress ?? "",
-                                    style: const TextStyle(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 12,
-
-                                      height: 1.5,
+                                      fontWeight: FontWeight.w400,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  const Text(
-                                    "Get Directions",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF2D8CFF),
-                                    ),
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Transform.rotate(
+                                        angle: 0.5,
+                                        child: Icon(
+                                          Icons.navigation,
+                                          color: AppTheme.appThemeColor,
+                                          size: 15,
+                                        ),
+                                      ),
+                                      Text(
+                                        "Get Directions",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppTheme.appThemeColor,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child:
-                                  booking.images != null &&
-                                      booking.images!.isNotEmpty
-                                  ? Image.network(
-                                      booking.images!.first,
-                                      width: 70,
-                                      height: 70,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Container(
-                                      width: 70,
-                                      height: 70,
-                                      color: Colors.grey.shade200,
-                                    ),
                             ),
                           ],
                         ),
 
                         const SizedBox(height: 10),
-                        Divider(color: Colors.grey.shade300),
+                        DottedLine(),
                         const SizedBox(height: 10),
 
-                        /// STAY DATES
-                        const Text(
-                          "Stay Dates",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "${formatDate(booking.checkInDate)} — ${booking.nights ?? ""} Night — ${formatDate(booking.checkOutDate)}\n"
-                          "${booking.checkInTime ?? ""} — ${booking.checkOutTime ?? ""}",
-                          style: const TextStyle(fontSize: 12, height: 1.5),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _stayTiming(
+                              text: "Check-in",
+                              subtext: formatDate(booking.checkInDate),
+                              time: booking.checkInTime ?? "",
+                              axis: CrossAxisAlignment.start,
+                            ),
+                            _stayTiming(
+                              text: "Check-out",
+                              subtext: formatDate(booking.checkOutDate),
+                              time: booking.checkOutTime ?? "",
+                              axis: CrossAxisAlignment.end,
+                            ),
+                          ],
                         ),
 
                         const SizedBox(height: 10),
-                        Divider(color: Colors.grey.shade300),
+                        DottedLine(),
                         const SizedBox(height: 10),
 
                         /// GUEST DETAILS
-                        const Text(
-                          "Guest and Stay Details",
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          booking.stayDetails ?? "",
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                          _sectionHeaderAndSubtext(text: "Guest and Stay Details", subtext: booking.stayDetails ?? "",),
+                          _sectionHeaderAndSubtext(text: "Primary Traveller", subtext: booking.userName ?? "", axis: CrossAxisAlignment.end),
+                        ]),
+
+                        const SizedBox(height: 16),
+
+                        /// Header
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.file_download_outlined,
+                              size: 16,
+                              color: AppTheme.appThemeColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "Download Invoice",
+                              style: GoogleFonts.poppins(
+                                color: AppTheme.appThemeColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
 
-                        const SizedBox(height: 10),
-
-                        /// PRIMARY TRAVELLER
-                        const Text(
-                          "Primary Traveller",
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          booking.userName ?? "",
-                          style: const TextStyle(fontSize: 14),
-                        ),
                       ],
                     ),
                   ),
@@ -411,30 +373,27 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                   const SizedBox(height: 14),
 
                   /// HOTEL RULES
-                  if (booking.rules != null && booking.rules!.isNotEmpty)
+                  if (booking.rules != null && booking.rules!.isNotEmpty) ...[
+                    const Text(
+                      "Hotel Rules",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8,),
                     _card(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            "Hotel Rules",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
                           const SizedBox(height: 12),
                           ...booking.rules!.map(
-                            (rule) => Padding(
+                                (rule) => Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  const Icon(
-                                    Icons.close,
-                                    color: Colors.red,
-                                    size: 14,
-                                  ),
+                                  Container(width: 6, height: 6, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.red),),
                                   const SizedBox(width: 5),
                                   Expanded(
                                     child: Text(
@@ -449,6 +408,7 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                         ],
                       ),
                     ),
+                  ],
 
                   const SizedBox(height: 24),
 
@@ -468,12 +428,17 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                           const SizedBox(height: 14),
                           _priceRow(
                             "Base Price",
-                            "₹ ${payment.basePrice ?? "0.00"}",
+                            "${payment.currency ?? "XOF"} ${payment.basePrice ?? "0.00"}",
+                          ),
+                          const SizedBox(height: 12),
+                          _priceRow(
+                            "Miscellaneous Fee",
+                            "${payment.currency ?? "XOF"} ${payment.miscFee ?? "0.00"}",
                           ),
                           const SizedBox(height: 12),
                           _priceRow(
                             "Discount",
-                            "- ₹ ${payment.discount ?? "0.00"}",
+                            "- ${payment.currency ?? "XOF"} ${payment.discount ?? "0.00"}",
                             valueColor: Colors.green,
                           ),
                           const SizedBox(height: 10),
@@ -481,7 +446,7 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                           const SizedBox(height: 10),
                           _priceRow(
                             "Total Amount",
-                            "₹ ${payment.totalAmount ?? "0.00"}",
+                            "${payment.currency ?? "XOF"} ${payment.totalAmount ?? "0.00"}",
                             isBold: true,
                           ),
                         ],
@@ -490,6 +455,75 @@ class _TripCompletedScreenState extends State<TripCompletedScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _stayTiming({
+    required String text,
+    required String subtext,
+    required String time,
+    required CrossAxisAlignment axis,
+  }) {
+    return Column(
+      crossAxisAlignment: axis,
+      children: [
+        Text(
+          text,
+          style: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.black,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtext,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: AppTheme.black.withValues(alpha: 0.6),
+          ),
+        ),
+        Text(
+          time,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: AppTheme.black.withValues(alpha: 0.6),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _sectionHeaderAndSubtext({
+    required String text,
+    required String subtext,
+    CrossAxisAlignment? axis,
+  }) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: axis ?? CrossAxisAlignment.start,
+        children: [
+          Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.black,
+            ),
+          ),
+          Text(
+            subtext,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: AppTheme.black,
+            ),
+            maxLines: 2,
+          ),
+        ],
+      ),
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:elior/app_values/app_theme.dart';
+import 'package:get/get.dart';
 
 class OffersBottomSheet extends StatefulWidget {
   final List<dynamic> coupons;
@@ -55,9 +56,9 @@ class _OffersBottomSheetState extends State<OffersBottomSheet> {
           ),
           const SizedBox(height: 20),
           // Title
-          const Text(
-            "Offers & Coupons",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          Text(
+            "offers_coupons".tr,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 20),
           // Search field
@@ -71,7 +72,7 @@ class _OffersBottomSheetState extends State<OffersBottomSheet> {
                 });
               },
               decoration: InputDecoration(
-                hintText: "Search coupon",
+                hintText: "search_coupon".tr,
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.grey.shade100,
@@ -97,7 +98,7 @@ class _OffersBottomSheetState extends State<OffersBottomSheet> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "No coupons available",
+                    "no_coupons_available".tr,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
@@ -165,7 +166,7 @@ class _CouponCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Get ${coupon.value}% off",
+                  coupon.description,
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 13,
@@ -179,7 +180,7 @@ class _CouponCard extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: isApplied ? Colors.grey : AppTheme.appThemeColor,
             ),
-            child: Text(isApplied ? "Applied" : "Apply"),
+            child: Text(isApplied ? "applied".tr : "apply".tr),
           ),
         ],
       ),

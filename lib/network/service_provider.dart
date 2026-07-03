@@ -5,6 +5,8 @@ import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/constatnt/assets_image.dart';
 import 'package:elior/response_model/booking_history_details.dart';
 import 'package:elior/response_model/booking_history_response.dart';
+import 'package:elior/response_model/bus_booking_response.dart';
+import 'package:elior/response_model/bus_booking_success_response.dart';
 import 'package:elior/response_model/bus_seat_model.dart';
 import 'package:elior/response_model/fav_model/add_fav_moodel.dart';
 import 'package:elior/response_model/fav_model/get_fav_model.dart';
@@ -12,6 +14,7 @@ import 'package:elior/response_model/final_payment_model/final_payment_model.dar
 import 'package:elior/response_model/final_payment_model/payment_initiated_model.dart';
 import 'package:elior/response_model/forgot_model_response.dart';
 import 'package:elior/response_model/get_all_coupons_response.dart';
+import 'package:elior/response_model/home_stay_respnse/budget_firendly_homestay_response.dart';
 import 'package:elior/response_model/home_stay_respnse/homestay_suggestion_response.dart';
 import 'package:elior/response_model/login_model.dart';
 import 'package:elior/response_model/nearby_properties_response.dart';
@@ -77,6 +80,7 @@ class ServiceProvider {
       print(res.body);
 
       if (_ok(res)) {
+        print("SUI: ${fromJson(res.body)}");
         return fromJson(res.body);
       }
 
@@ -106,7 +110,11 @@ class ServiceProvider {
     final res = await ApiService().post(url, body);
     print(res);
     if (showLoad) hideLoader();
-    if (_ok(res)) return fromJson(res.body);
+    if (_ok(res)) {
+      print("HELL: ${res.body}");
+      print("SUI: ${fromJson(res.body)}");
+      return fromJson(res.body);
+    }
     _logError(url, res.body);
     return fallback;
   }
@@ -175,10 +183,10 @@ class ServiceProvider {
       _get("${ApiConstants.baseUrl}/search-hotels-by-id?hotel_id=$id", HotelDetailModel.fromJson, HotelDetailModel(), showLoad: false);
 
   Future<FilterModel> filterHotelApi() =>
-      _get("${ApiConstants.baseUrl}/get_hotel_filters_data", FilterModel.fromJson, FilterModel());
+      _get("${ApiConstants.baseUrl}/get_hotel_filters_data", FilterModel.fromJson, FilterModel(), showLoad: false);
 
   Future<FilterModel> filterHomeStayApi() =>
-      _get("${ApiConstants.baseUrl}/get_homestay_filters_data", FilterModel.fromJson, FilterModel());
+      _get("${ApiConstants.baseUrl}/get_homestay_filters_data", FilterModel.fromJson, FilterModel(), showLoad: false);
 
   Future<SearchFilterModel> searchFilterApi({
     required String search,
@@ -253,6 +261,8 @@ class ServiceProvider {
 
   Future<NearbyPropertiesResponse> getNearbyProperties() => _get(ApiConstants.getNearbyProperties, NearbyPropertiesResponse.fromJson, NearbyPropertiesResponse(), showLoad: true);
 
+  Future<BudgetFriendlyHomestaysResponse> getBudgetFriendlyHomestays() => _get(ApiConstants.getNearbyProperties, BudgetFriendlyHomestaysResponse.fromJson, BudgetFriendlyHomestaysResponse(), showLoad: true);
+
   Future<BookingHistoryDetails> bookingHistoryDetail(int id) =>
       _get("${ApiConstants.baseUrl}/get-booking-history-by-id?booking_id=$id", BookingHistoryDetails.fromJson, BookingHistoryDetails(), showLoad: false);
 
@@ -271,6 +281,31 @@ class ServiceProvider {
   }) =>
       _post(
         ApiConstants.finalHotelApi,
+        {
+          "propertyId": propertyId, "check_in_date": checkInDate, "check_out_date": checkOutDate,
+          "guests": guests, "room_type": roomtype, "roomId_allotted": roomIdAllotted,
+          "base_price": basePrice, "taxFee": taxFee, "discount_amount": discountAmount,
+          "totalAmount": totalAmount, "payPlan": payPlan,
+        },
+        FInalPaymentModel.fromJson,
+        FInalPaymentModel(),
+      );
+
+  Future<FInalPaymentModel> payFinalPaymentApi({
+    required String propertyId,
+    required String checkInDate,
+    required String checkOutDate,
+    required String guests,
+    required String roomtype,
+    required String roomIdAllotted,
+    required int basePrice,
+    required int taxFee,
+    required int discountAmount,
+    required int totalAmount,
+    required String payPlan,
+  }) =>
+      _post(
+        ApiConstants.finalHomeApi,
         {
           "propertyId": propertyId, "check_in_date": checkInDate, "check_out_date": checkOutDate,
           "guests": guests, "room_type": roomtype, "roomId_allotted": roomIdAllotted,
@@ -361,34 +396,6 @@ class ServiceProvider {
         HomePaymentModel(),
       );
 
-  Future<FInalPaymentModel> payFinalPaymentApi({
-    required String propertyId,
-    required String checkInDate,
-    required String checkOutDate,
-    required String guests,
-    required String roomtype,
-    required String roomIdAllotted,
-    required int basePrice,
-    required int taxFee,
-    required int discountAmount,
-    required int totalAmount,
-    required String payPlan,
-  }) =>
-      _post(
-        ApiConstants.finalPaymentApi,
-        {
-          "propertyId": propertyId, "check_in_date": checkInDate, "check_out_date": checkOutDate,
-          "guests": guests, "room_type": roomtype, "roomId_allotted": roomIdAllotted,
-          "base_price": basePrice, "taxFee": taxFee, "discount_amount": discountAmount,
-          "totalAmount": totalAmount, "payPlan": payPlan,
-        },
-        FInalPaymentModel.fromJson,
-        FInalPaymentModel(),
-      );
-
-  Future<HomestaySuggestionResponse> fetchHomestaysSuggestions(String query) =>
-      _get(ApiConstants.homestaySuggestions(query), HomestaySuggestionResponse.fromJson, HomestaySuggestionResponse(), showLoad: false);
-
   // ─── Transport / Bus ───────────────────────────────────────────────────────
 
   Future<BusListResponse> busRouteApi({
@@ -432,7 +439,7 @@ class ServiceProvider {
       );
 
   /// Uses raw http because it sends a JSON list in the body (GetConnect encodes maps only).
-  Future<Map<String, dynamic>> proceedPayNowSeatBooking({
+  Future<BusBookingResponse> proceedPayNowSeatBooking({
     required int busId,
     required int busRouteId,
     required int boardingPointId,
@@ -453,7 +460,7 @@ class ServiceProvider {
       body: jsonEncode(body),
     );
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body);
+      return  BusBookingResponse.fromJson(jsonDecode(response.body));//jsonDecode(response.body);
     }
     throw Exception("❌ [proceedPayNowSeatBooking] ${response.statusCode}: ${response.body}");
   }
@@ -538,6 +545,10 @@ class ServiceProvider {
 
   Future<PaySuccessModel> paymentSuccess({required String transactionId}) =>
       _get("${ApiConstants.baseUrl}/pay/verifyPaymentKkiapay/$transactionId", PaySuccessModel.fromJson, PaySuccessModel());
+
+  // This is jugaad, anyone Checking it. I have separated api callings of verify payment. This project is already messed up and client is not paying me much.
+  Future<BusBookingSuccessResponse> busPaymentSuccess({required String transactionId}) =>
+      _get("${ApiConstants.baseUrl}/pay/verifyPaymentKkiapay/$transactionId", BusBookingSuccessResponse.fromJson, BusBookingSuccessResponse());
 
   // ─── Profile ───────────────────────────────────────────────────────────────
 
