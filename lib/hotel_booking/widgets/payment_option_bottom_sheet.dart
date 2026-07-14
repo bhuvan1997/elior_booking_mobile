@@ -35,11 +35,11 @@ class PaymentOptionBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _PayOptionCard(
-            text: "Pay At Hotel",
-            isSelected: selectedOption == "Pay At Hotel",
-            subtext: "Pay 5% here and remaining at hotel",
+            text: "Pay At Property",
+            isSelected: selectedOption == "Pay At Property",
+            subtext: "Pay 5% here and remaining at property",
             onTap: () {
-              onOptionSelected("Pay At Hotel", 2);
+              onOptionSelected("Pay At Property", 2);
               Navigator.pop(context);
             },
           ),

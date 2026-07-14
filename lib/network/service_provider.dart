@@ -18,6 +18,7 @@ import 'package:elior/response_model/home_stay_respnse/budget_firendly_homestay_
 import 'package:elior/response_model/home_stay_respnse/homestay_suggestion_response.dart';
 import 'package:elior/response_model/login_model.dart';
 import 'package:elior/response_model/nearby_properties_response.dart';
+import 'package:elior/response_model/property/budget_friendly_homestays.dart';
 import 'package:elior/response_model/property/property_search_response.dart';
 import 'package:elior/response_model/reset_password_response.dart';
 import 'package:elior/response_model/search_hotel_response.dart';
@@ -62,7 +63,6 @@ class ServiceProvider {
 
   // ─── Core helpers ──────────────────────────────────────────────────────────
 
-  /// GET → parse.  Pass [showLoad] = false to skip the loader (e.g. silent bg calls).
   Future<T> _get<T>(
       String url,
       T Function(Map<String, dynamic>) fromJson,
@@ -71,29 +71,17 @@ class ServiceProvider {
       }) async {
     try {
       if (showLoad) showLoader();
-
       final res = await ApiService().get(url);
-
       if (showLoad) hideLoader();
 
-      print("RESPONSE BODY");
-      print(res.body);
-
-      if (_ok(res)) {
-        print("SUI: ${fromJson(res.body)}");
+      if (_hasBody(res)) {
         return fromJson(res.body);
       }
 
       _logError(url, res.body);
-
       return fallback;
     } catch (e, stack) {
-      print("GET ERROR");
-      print(e);
-      print(stack);
-
       if (showLoad) hideLoader();
-
       rethrow;
     }
   }
@@ -108,19 +96,20 @@ class ServiceProvider {
       }) async {
     if (showLoad) showLoader();
     final res = await ApiService().post(url, body);
-    print(res);
     if (showLoad) hideLoader();
-    if (_ok(res)) {
-      print("HELL: ${res.body}");
-      print("SUI: ${fromJson(res.body)}");
+
+    if (_hasBody(res)) {
       return fromJson(res.body);
     }
+
     _logError(url, res.body);
     return fallback;
   }
 
-  bool _ok(Response res) =>
-      (res.statusCode == 200 || res.statusCode == 201) && res.body != null;
+  /// True whenever the server returned a JSON object we can hand to fromJson -
+  /// regardless of status code, since this API returns structured
+  /// {status, message, errors} bodies even for 4xx validation errors.
+  bool _hasBody(Response res) => res.body is Map<String, dynamic>;
 
   void _logError(String url, dynamic body) =>
       print("❌ [$url] → $body");
@@ -261,7 +250,7 @@ class ServiceProvider {
 
   Future<NearbyPropertiesResponse> getNearbyProperties() => _get(ApiConstants.getNearbyProperties, NearbyPropertiesResponse.fromJson, NearbyPropertiesResponse(), showLoad: true);
 
-  Future<BudgetFriendlyHomestaysResponse> getBudgetFriendlyHomestays() => _get(ApiConstants.getNearbyProperties, BudgetFriendlyHomestaysResponse.fromJson, BudgetFriendlyHomestaysResponse(), showLoad: true);
+  Future<BudgetFriendlyHomestayResponse> getBudgetFriendlyHomestays() => _get(ApiConstants.getBudgetFriendlyHomestays, BudgetFriendlyHomestayResponse.fromJson, BudgetFriendlyHomestayResponse(), showLoad: true);
 
   Future<BookingHistoryDetails> bookingHistoryDetail(int id) =>
       _get("${ApiConstants.baseUrl}/get-booking-history-by-id?booking_id=$id", BookingHistoryDetails.fromJson, BookingHistoryDetails(), showLoad: false);

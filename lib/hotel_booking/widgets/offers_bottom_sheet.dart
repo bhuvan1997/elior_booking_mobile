@@ -117,7 +117,9 @@ class _OffersBottomSheetState extends State<OffersBottomSheet> {
                   coupon: coupon,
                   isApplied: isApplied,
                   onApply: () {
-                    widget.onCouponApplied(coupon);
+                    if (!isApplied) {
+                      widget.onCouponApplied(coupon);
+                    }
                     Navigator.pop(context);
                   },
                 );

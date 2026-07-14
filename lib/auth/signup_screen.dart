@@ -1,3 +1,4 @@
+import 'package:country_picker/country_picker.dart';
 import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/auth/otp_screen.dart';
 import 'package:elior/constatnt/assets_image.dart';
@@ -15,6 +16,7 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import '../controller/auth_controller/register_controller.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
+import '../widgets/app_toast.dart';
 
 class SignupScreen extends StatefulWidget {
   SignupScreen({super.key});
@@ -25,7 +27,7 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final controller = Get.put(RegisterController());
-  Country selectedCountry = DataUtils.getCountry("225");
+  String selectedCountryCode = LocalStorages().getMobileCode() ?? "+225";
 
   @override
   Widget build(BuildContext context) {
@@ -85,17 +87,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-
-                    // Mobile Number with Country Code
-                    Text(
-                      "mobile".tr,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    AppMobileInput(controller: controller.phoneInput, initialCountry: selectedCountry,),
+                    _buildPhoneField(),
 
                     // Password
                     const SizedBox(height: 20),
@@ -138,6 +130,21 @@ class _SignupScreenState extends State<SignupScreen> {
                       }
 
                       await controller.registerApi();
+
+                      if (controller.registerModel.status == false) {
+                        if (controller.error != "") {
+                          Get.snackbar(
+                            "validation_error".tr,
+                            controller.error,
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: AppTheme.black,
+                            colorText: AppTheme.white,
+                            margin: const EdgeInsets.all(16),
+                            duration: const Duration(seconds: 3),
+                          );
+                          return;
+                        }
+                      }
 
                       if (controller.registerModel.status == true) {
                         LocalStorages().saveToken(
@@ -243,5 +250,63 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     return true;
+  }
+
+
+  Widget _buildPhoneField() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        InkWell(
+          onTap: () {
+            showCountryPicker(
+              context: context,
+              showPhoneCode: true,
+              onSelect: (country) {
+                setState(() {
+                  selectedCountryCode = "+${country.phoneCode}";
+                });
+              },
+            );
+          },
+          child: Container(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.grey.shade300,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  selectedCountryCode,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Icon(Icons.keyboard_arrow_down),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: AppTextField(
+            controller: controller.phoneInput,
+            label: "mobile_number".tr,
+            placeholder: "enter_mobile_number".tr,
+            keyboardType: TextInputType.phone,
+            prefixIcon: const Icon(
+              Icons.phone_outlined,
+              color: AppTheme.appThemeColor,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

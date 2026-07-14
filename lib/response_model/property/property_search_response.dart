@@ -45,13 +45,14 @@ class SearchParams {
   List<String>? allRules;
   Map<String, int>? allStars; // Changed from AllStars to Map
 
-  SearchParams(
-      {this.search,
-        this.startDate,
-        this.endDate,
-        this.allAmenities,
-        this.allRules,
-        this.allStars});
+  SearchParams({
+    this.search,
+    this.startDate,
+    this.endDate,
+    this.allAmenities,
+    this.allRules,
+    this.allStars,
+  });
 
   SearchParams.fromJson(Map<String, dynamic> json) {
     search = json['search'];
@@ -113,33 +114,34 @@ class Data {
   String? translatedCityCountry;
   String? translatedFacilities;
 
-  Data(
-      {this.id,
-        this.merchantId,
-        this.name,
-        this.category,
-        this.description,
-        this.address,
-        this.city,
-        this.state,
-        this.country,
-        this.zipcode,
-        this.latitude,
-        this.longitude,
-        this.phone,
-        this.email,
-        this.website,
-        this.starRating,
-        this.currency,
-        this.pricePerNight,
-        this.specialOffer,
-        this.isFeatured,
-        this.checkInTime,
-        this.checkOutTime,
-        this.facilities,
-        this.rules,
-        this.images,
-        this.status});
+  Data({
+    this.id,
+    this.merchantId,
+    this.name,
+    this.category,
+    this.description,
+    this.address,
+    this.city,
+    this.state,
+    this.country,
+    this.zipcode,
+    this.latitude,
+    this.longitude,
+    this.phone,
+    this.email,
+    this.website,
+    this.starRating,
+    this.currency,
+    this.pricePerNight,
+    this.specialOffer,
+    this.isFeatured,
+    this.checkInTime,
+    this.checkOutTime,
+    this.facilities,
+    this.rules,
+    this.images,
+    this.status,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -203,31 +205,31 @@ class Data {
 
   factory Data.fromDatam(Datams d) {
     return Data(
-        id: d.id,
-        name: d.name,
-        city: d.city,
-        country: d.country,
-        pricePerNight: d.pricePerNight,
-        starRating: d.starRating,
-        images: d.images,
-        currency: d.currency,
-        checkInTime: d.checkInTime,
-        checkOutTime: d.checkOutTime
+      id: d.id,
+      name: d.name,
+      city: d.city,
+      country: d.country,
+      pricePerNight: d.pricePerNight,
+      starRating: d.starRating,
+      images: d.images,
+      currency: d.currency,
+      checkInTime: d.checkInTime,
+      checkOutTime: d.checkOutTime,
     );
   }
 
   factory Data.fromDatams(DataSort d) {
     return Data(
-        id: d.id,
-        name: d.name,
-        city: d.city,
-        country: d.country,
-        pricePerNight: d.pricePerNight,
-        starRating: d.starRating,
-        images: d.images,
-        currency: d.currency,
-        checkInTime: d.checkInTime,
-        checkOutTime: d.checkOutTime
+      id: d.id,
+      name: d.name,
+      city: d.city,
+      country: d.country,
+      pricePerNight: d.pricePerNight,
+      starRating: d.starRating,
+      images: d.images,
+      currency: d.currency,
+      checkInTime: d.checkInTime,
+      checkOutTime: d.checkOutTime,
     );
   }
 }
@@ -273,7 +275,9 @@ class PropertySearchResponse {
   }
 
   static List<PropertySearchResponse> listFromJson(List<dynamic> jsonList) {
-    return jsonList.map((json) => PropertySearchResponse.fromJson(json)).toList();
+    return jsonList
+        .map((json) => PropertySearchResponse.fromJson(json))
+        .toList();
   }
 
   // NEW: Factory to convert from SearchHotelModel
@@ -281,7 +285,9 @@ class PropertySearchResponse {
     // Convert Data list to Property list
     List<Property>? propertyData;
     if (model.data != null) {
-      propertyData = model.data!.map((data) => Property.fromData(data)).toList();
+      propertyData = model.data!
+          .map((data) => Property.fromData(data))
+          .toList();
     }
 
     // Convert SearchParams
@@ -372,9 +378,9 @@ class Property {
 
   Property.fromJson(Map<String, dynamic> json) {
     id = json['id'];
-    merchantId = json['merchant_id'];
+    merchantId = json['merchant_id'] ?? 0;
     name = json['name'];
-    category = json['category'];
+    category = json['category'] ?? "Homestay";
     description = json['description'];
     address = json['address'];
     city = json['city'];
@@ -389,15 +395,19 @@ class Property {
     starRating = json['star_rating'];
     currency = json['currency'];
     pricePerNight = json['price_per_night'];
-    specialOffer = json['special_offer'];
-    isFeatured = json['is_featured'];
+    specialOffer = json['special_offer'] ?? 0;
+    isFeatured = json['is_featured'] ?? 0;
     checkInTime = json['check_in_time'];
     checkOutTime = json['check_out_time'];
-    facilities = json['facilities']?.cast<String>();
-    rules = json['rules']?.cast<String>();
+    facilities = json['facilities'] != null
+        ? List<String>.from(json['facilities'])
+        : [];
+    rules = json['rules'] != null
+        ? List<String>.from(json['rules'])
+        : [];
     images = json['images']?.cast<String>();
-    status = json['status'];
-    isFavourite = json['is_favourite'];
+    status = json['status'] ?? "active";
+    isFavourite = json['is_favourite'] ?? 0;
   }
 
   Map<String, dynamic> toJson() {
@@ -531,6 +541,44 @@ class Property {
     );
   }
 
+  factory Property.fromBudgetJson(Map<String, dynamic> json) {
+    return Property(
+      id: json['id'],
+      merchantId: json['merchant_id'] ?? 0,
+      name: json['name'],
+      category: json['category'] ?? "Homestay",
+      description: json['description'],
+      address: json['address'],
+      city: json['city'],
+      state: json['state'],
+      country: json['country'],
+      zipcode: json['zipcode'],
+      latitude: json['latitude'],
+      longitude: json['longitude'],
+      phone: json['phone'],
+      email: json['email'],
+      website: json['website'],
+      starRating: json['star_rating'],
+      currency: json['currency'],
+      pricePerNight: json['price_per_night'],
+      specialOffer: json['special_offer'] ?? 0,
+      isFeatured: json['is_featured'] ?? 0,
+      checkInTime: json['check_in_time'],
+      checkOutTime: json['check_out_time'],
+      facilities: json['facilities'] != null
+          ? List<String>.from(json['facilities'])
+          : [],
+      rules: json['rules'] != null
+          ? List<String>.from(json['rules'])
+          : [],
+      images: json['images'] != null
+          ? List<String>.from(json['images'])
+          : [],
+      status: json['status'] ?? "active",
+      isFavourite: json['is_favourite'] ?? 0,
+    );
+  }
+
   // Helper methods
   bool get isHomestay => category != null && category!.isNotEmpty;
   bool get isHotel => true;
@@ -544,10 +592,13 @@ class Property {
 extension PropertyListExtension on List<Property> {
   List<Property> get favorites => where((p) => p.isFavourite == 1).toList();
   List<Property> get featured => where((p) => p.isFeatured == 1).toList();
-  List<Property> get withSpecialOffer => where((p) => p.specialOffer == 1).toList();
+  List<Property> get withSpecialOffer =>
+      where((p) => p.specialOffer == 1).toList();
 
   List<Property> filterByCategory(String category) {
-    return where((p) => p.category?.toLowerCase() == category.toLowerCase()).toList();
+    return where(
+      (p) => p.category?.toLowerCase() == category.toLowerCase(),
+    ).toList();
   }
 
   List<Property> filterByStarRating(int minStars) {

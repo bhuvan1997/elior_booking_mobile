@@ -14,7 +14,9 @@ class RegisterController extends GetxController {
   TextEditingController confirmPasswordInput = TextEditingController();
 
   RegisterModel registerModel = RegisterModel();
-  String mobileCode = "";
+  String mobileCode = "255";
+
+  String error = "";
   Future registerApi() async {
     try {
       registerModel = await ServiceProvider().register(
@@ -24,6 +26,20 @@ class RegisterController extends GetxController {
         password: passwordInput.text.trim(),
         mobileCode: mobileCode,
       );
+      print("NIMACSOD: ${registerModel.toJson()}");
+      print("NIMACSOD: ${registerModel.errors}");
+
+      if (registerModel.errors != null && registerModel.errors!.isNotEmpty) {
+        print("NIMACSOD: ${registerModel.errors}");
+
+
+        if (registerModel.errors!["email"] != null) {
+          error = registerModel.errors?["email"]?.first ?? "";
+          print("NIMACSOD: $error");
+        } else {
+          error = registerModel.errors?["mobile"]?.first ?? "";
+        }
+      }
     } catch (e) {
       print('Error occurred: $e');
     }

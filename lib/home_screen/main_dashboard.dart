@@ -50,7 +50,6 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       fetchBookingHotels();
       travelfetchBookingHotels();
-
     });
   }
 
@@ -112,13 +111,15 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
               _buildCategoryRow(),
               const SizedBox(height: 20),
 
-              if (controller.nearbyProperties.data != null && controller.nearbyProperties.data!.isNotEmpty) ...[
+              if (controller.nearbyProperties.data != null &&
+                  controller.nearbyProperties.data!.isNotEmpty) ...[
                 _buildSectionHeader("nearby_properties".tr),
                 _buildNearbyPropertiesCarousel(),
                 const SizedBox(height: 20),
               ],
 
-              if (controller.budgetFriendlyHomestays.data != null && controller.budgetFriendlyHomestays.data!.isNotEmpty) ...[
+              if (controller.budgetFriendlyHomestays.data != null &&
+                  controller.budgetFriendlyHomestays.data!.isNotEmpty) ...[
                 _buildSectionHeader("budget_friendly_homestays".tr),
                 _buildBudgetFriendlyHomeStaysCarousel(),
                 const SizedBox(height: 20),
@@ -233,6 +234,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
               tripCurrency: property.currency ?? "XOF",
               pricePerNight: property.pricePerNight ?? 0,
               starRating: property.starRating ?? 0,
+              showStarRatings: false,
               onTap: () => property.navigateToDetail(context),
             ),
           );
@@ -277,8 +279,9 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
               tripCurrency: property.currency ?? "XOF",
               pricePerNight: property.pricePerNight ?? 0,
               starRating: property.starRating ?? 0,
+              showStarRatings: false,
               onTap: () => Get.to(
-                    () => UnifiedPropertyDetailsScreen(
+                () => UnifiedPropertyDetailsScreen(
                   id: property.id ?? 0,
                   fac: '', // You can pass appropriate value if needed
                   slug: "home",
@@ -329,11 +332,14 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
               pricePerNight: trip.pricePerNight ?? 0,
               starRating: trip.starRating ?? 0,
               onTap: () {
-                Get.to(() => UnifiedPropertyDetailsScreen(
-                  id: trip.id ?? 0,
-                  fac: trip.description ?? "",
-                  slug: "hotel",
-                ));
+                Get.to(
+                  () => UnifiedPropertyDetailsScreen(
+                    id: trip.id ?? 0,
+                    fac: trip.description ?? "",
+                    slug: "hotel",
+
+                  ),
+                );
               },
             ),
           );
@@ -350,6 +356,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
     required num pricePerNight,
     required num starRating,
     required VoidCallback onTap,
+    bool showStarRatings = true,
   }) {
     return InkWell(
       onTap: onTap,
@@ -427,18 +434,23 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
                           color: Colors.black,
                         ),
                       ),
-                      Row(
-                        children: [
-                          Icon(Icons.star, color: Colors.amberAccent, size: 16),
-                          Text(
-                            "$starRating.0",
-                            style: GoogleFonts.poppins(
-                              color: AppTheme.black,
-                              fontWeight: FontWeight.w500,
+                      if (showStarRatings)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.star,
+                              color: Colors.amberAccent,
+                              size: 16,
                             ),
-                          ),
-                        ],
-                      ),
+                            Text(
+                              "$starRating.0",
+                              style: GoogleFonts.poppins(
+                                color: AppTheme.black,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ],
@@ -669,9 +681,7 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
     );
   }
 
-  Widget _buildOffersSection(
-      List<Coupon> coupons
-      ) {
+  Widget _buildOffersSection(List<Coupon> coupons) {
     return SizedBox(
       height: 164,
       child: ListView.separated(
@@ -680,7 +690,8 @@ class _MainScreenWithButtonsState extends State<MainScreenWithButtons> {
         itemCount: coupons.length,
         separatorBuilder: (_, __) => const SizedBox(width: 14),
         itemBuilder: (context, index) {
-          final image = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200";
+          final image =
+              "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200";
           final offer = coupons[index];
 
           return _offerCard(
@@ -701,9 +712,7 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.horizontal(
-          right: Radius.circular(24),
-        ),
+        borderRadius: BorderRadius.horizontal(right: Radius.circular(24)),
       ),
       child: SafeArea(
         child: Column(
@@ -752,9 +761,8 @@ class AppDrawer extends StatelessWidget {
                     title: "privacy_policy".tr,
                     onTap: () {
                       Get.to(
-                            () => const WebViewScreen(
-                          url:
-                          "https://eliorbooking.com/privacy_mobile",
+                        () => const WebViewScreen(
+                          url: "https://eliorbooking.com/privacy_mobile",
                           title: "privacy_policy",
                         ),
                       );
@@ -766,9 +774,9 @@ class AppDrawer extends StatelessWidget {
                     title: "terms_conditions".tr,
                     onTap: () {
                       Get.to(
-                            () => const WebViewScreen(
+                        () => const WebViewScreen(
                           url:
-                          "https://eliorbooking.com/terms_condition_mobile",
+                              "https://eliorbooking.com/terms_condition_mobile",
                           title: "terms_conditions",
                         ),
                       );
@@ -784,9 +792,8 @@ class AppDrawer extends StatelessWidget {
                     title: "list_your_property".tr,
                     onTap: () {
                       Get.to(
-                            () => const WebViewScreen(
-                          url:
-                          "https://eliorbooking.com/list_property_mobile",
+                        () => const WebViewScreen(
+                          url: "https://eliorbooking.com/list_property_mobile",
                           title: "list_your_property",
                         ),
                       );
@@ -798,9 +805,8 @@ class AppDrawer extends StatelessWidget {
                     title: "about_app".tr,
                     onTap: () {
                       Get.to(
-                            () => const WebViewScreen(
-                          url:
-                          "https://eliorbooking.com/about_app_mobile",
+                        () => const WebViewScreen(
+                          url: "https://eliorbooking.com/about_app_mobile",
                           title: "about_app",
                         ),
                       );
@@ -829,14 +835,9 @@ class AppDrawer extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white,
-                width: 1,
-              ),
+              border: Border.all(color: Colors.white, width: 1),
             ),
-            child: ClipOval(
-              child: _buildProfileImage(),
-            ),
+            child: ClipOval(child: _buildProfileImage()),
           ),
         ),
 
@@ -868,11 +869,7 @@ class AppDrawer extends StatelessWidget {
 
   Widget _sectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(
-        left: 6,
-        bottom: 10,
-        top: 8,
-      ),
+      padding: const EdgeInsets.only(left: 6, bottom: 10, top: 8),
       child: Text(
         title.toUpperCase(),
         style: GoogleFonts.poppins(
@@ -898,10 +895,7 @@ class AppDrawer extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 14,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             child: Row(
               children: [
                 Container(
@@ -911,11 +905,7 @@ class AppDrawer extends StatelessWidget {
                     color: AppTheme.appThemeColor.withOpacity(.10),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    icon,
-                    color: AppTheme.appThemeColor,
-                    size: 22,
-                  ),
+                  child: Icon(icon, color: AppTheme.appThemeColor, size: 22),
                 ),
 
                 const SizedBox(width: 14),
@@ -953,9 +943,7 @@ class AppDrawer extends StatelessWidget {
           icon: const Icon(Icons.logout),
           label: Text(
             "logout".tr,
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-            ),
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red.shade50,
@@ -986,29 +974,17 @@ class AppDrawer extends StatelessWidget {
     final imagePath = LocalStorages().getProfileImage();
 
     if (imagePath == null || imagePath.isEmpty) {
-      return Image.asset(
-        "assets/images/default_user.png",
-        fit: BoxFit.cover,
-      );
+      return Image.asset("assets/images/default_user.png", fit: BoxFit.cover);
     }
 
     if (File(imagePath).existsSync()) {
-      return Image.file(
-        File(imagePath),
-        fit: BoxFit.cover,
-      );
+      return Image.file(File(imagePath), fit: BoxFit.cover);
     }
 
     if (imagePath.startsWith("http")) {
-      return Image.network(
-        imagePath,
-        fit: BoxFit.cover,
-      );
+      return Image.network(imagePath, fit: BoxFit.cover);
     }
 
-    return Image.asset(
-      "assets/images/default_user.png",
-      fit: BoxFit.cover,
-    );
+    return Image.asset("assets/images/default_user.png", fit: BoxFit.cover);
   }
 }

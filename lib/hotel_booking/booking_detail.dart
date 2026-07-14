@@ -134,11 +134,15 @@ class _ReviewBookingScreenState extends State<ReviewBookingScreen> {
     }
   }
 
+  double get totalBeforeDiscount => basePrice + taxes;
+  double get payNowBeforeDiscount =>
+      _paymentOption == 2 ? (totalBeforeDiscount * 0.05) : totalBeforeDiscount;
+
   void _applyCoupon(dynamic coupon) {
     final result = _couponService.applyCoupon(
       coupon: coupon,
-      totalAmount: totalAmount,
-      payNowAmount: payNowAmount,
+      totalAmount: totalBeforeDiscount,
+      payNowAmount: payNowBeforeDiscount,
     );
     setState(() {
       appliedCouponName = result.couponName;

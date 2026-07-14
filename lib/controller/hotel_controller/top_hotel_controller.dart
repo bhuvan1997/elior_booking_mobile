@@ -1,6 +1,7 @@
 import 'package:elior/response_model/get_all_coupons_response.dart';
 import 'package:elior/response_model/home_stay_respnse/budget_firendly_homestay_response.dart';
 import 'package:elior/response_model/nearby_properties_response.dart';
+import 'package:elior/response_model/property/budget_friendly_homestays.dart';
 import 'package:elior/response_model/top_hotel_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -11,7 +12,7 @@ class TopHotelController extends GetxController {
   TopHotelModel topHotelModel = TopHotelModel();
   NearbyPropertiesResponse nearbyProperties = NearbyPropertiesResponse();
   CouponResponse couponResponse = CouponResponse();
-  BudgetFriendlyHomestaysResponse budgetFriendlyHomestays = BudgetFriendlyHomestaysResponse();
+  BudgetFriendlyHomestayResponse budgetFriendlyHomestays = BudgetFriendlyHomestayResponse();
 
   @override
   void onInit() {
