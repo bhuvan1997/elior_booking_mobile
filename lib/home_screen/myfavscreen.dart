@@ -117,7 +117,6 @@ class _MyFavScreenState extends State<MyFavScreen> {
       itemCount: bookingHistoryModel.data!.length,
       itemBuilder: (context, index) {
         final data = bookingHistoryModel.data![index];
-
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: GestureDetector(
@@ -125,7 +124,7 @@ class _MyFavScreenState extends State<MyFavScreen> {
               Get.to(UnifiedPropertyDetailsScreen(
                 id: data.id ?? 0,
                 fac: data.name ?? "",
-                slug: "hotel",
+                slug: data.propertyType == "hotel" ? "hotel" : "homestay",
               ));
             },
             child: _buildHotelCard(data, index),

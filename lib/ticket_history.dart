@@ -24,7 +24,9 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    bookingHistoryDetail(widget.id);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      bookingHistoryDetail(widget.id);
+    });
   }
 
   Future<void> bookingHistoryDetail(int id) async {
@@ -34,8 +36,9 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
         bookingHistoryDetails = data;
         isLoading = false;
       });
-    } catch (e) {
-      debugPrint("Error : $e");
+    } catch (e, stackTrace) {
+      debugPrint(e.toString());
+      debugPrint(stackTrace.toString());
       setState(() => isLoading = false);
     }
   }

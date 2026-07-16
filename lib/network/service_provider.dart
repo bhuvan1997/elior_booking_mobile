@@ -74,6 +74,7 @@ class ServiceProvider {
       final res = await ApiService().get(url);
       if (showLoad) hideLoader();
 
+
       if (_hasBody(res)) {
         return fromJson(res.body);
       }
@@ -253,7 +254,7 @@ class ServiceProvider {
   Future<BudgetFriendlyHomestayResponse> getBudgetFriendlyHomestays() => _get(ApiConstants.getBudgetFriendlyHomestays, BudgetFriendlyHomestayResponse.fromJson, BudgetFriendlyHomestayResponse(), showLoad: true);
 
   Future<BookingHistoryDetails> bookingHistoryDetail(int id) =>
-      _get("${ApiConstants.baseUrl}/get-booking-history-by-id?booking_id=$id", BookingHistoryDetails.fromJson, BookingHistoryDetails(), showLoad: false);
+      _get("${ApiConstants.baseUrl}/get-booking-history-by-id?booking_id=$id", BookingHistoryDetails.fromJson, BookingHistoryDetails(), showLoad: true);
 
   Future<FInalPaymentModel> payFinalHotelPaymentApi({
     required String propertyId,
@@ -458,7 +459,7 @@ class ServiceProvider {
       _get(ApiConstants.busHistory, BusHistoryModel.fromJson, BusHistoryModel());
 
   Future<BusIicketHistoryModel> busTicketHistoryDetail(int id) =>
-      _get("${ApiConstants.baseUrl}/get-bus-booking-history-by-id?booking_id=$id", BusIicketHistoryModel.fromJson, BusIicketHistoryModel(), showLoad: false);
+      _get("${ApiConstants.baseUrl}/get-bus-booking-history-by-id?booking_id=$id", BusIicketHistoryModel.fromJson, BusIicketHistoryModel(), showLoad: true);
 
   // ─── Trips & Travel blogs ──────────────────────────────────────────────────
 

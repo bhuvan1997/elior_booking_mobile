@@ -2,8 +2,6 @@ import 'package:elior/app_values/app_theme.dart';
 import 'package:elior/constatnt/assets_image.dart';
 import 'package:elior/hotel_booking/search_widgets/hotel_card.dart';
 import 'package:elior/hotel_booking/search_widgets/sort_filter_button.dart';
-import 'package:elior/response_model/property/property_search_response.dart';
-import 'package:elior/utils/project_utils.dart';
 import 'package:elior/widgets/app_button.dart';
 import 'package:elior/widgets/toolbar.dart';
 import 'package:flutter/material.dart';
@@ -52,7 +50,7 @@ class _HotelHomeResultScreenState extends State<HotelHomeResultScreen> {
       centerTitle: false,
       isSubtext: true,
       subtextWidget: GestureDetector(
-        onTap: () => controller.setEditable(true),
+        onTap: () => controller.setEditable(),
         child: _buildDateCard(
           "${HotelDateFormatters.shortDate(controller.model.searchParams?.startDate)} - "
               "${HotelDateFormatters.shortDate(controller.model.searchParams?.endDate)}",

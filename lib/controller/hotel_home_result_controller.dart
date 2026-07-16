@@ -337,12 +337,22 @@ class HotelHomeResultController extends GetxController {
     await _executeSearch(
       closeBottomSheet: true,
       fetch: () async {
-        final result = await ServiceProvider().searchSortingApi(
-          search: locationController.text.trim(),
-          startDate: HotelDateFormatters.apiOrEmpty(checkInDate),
-          endDate: HotelDateFormatters.apiOrEmpty(checkOutDate),
-          sort: sorting ?? "",
-        );
+        late SearchSotingModel result;
+        if (slug == "hotel") {
+          result = await ServiceProvider().searchSortingApi(
+            search: locationController.text.trim(),
+            startDate: HotelDateFormatters.apiOrEmpty(checkInDate),
+            endDate: HotelDateFormatters.apiOrEmpty(checkOutDate),
+            sort: sorting ?? "",
+          );
+        } else {
+          result = await ServiceProvider().searchSortingHomeApi(
+            search: locationController.text.trim(),
+            startDate: HotelDateFormatters.apiOrEmpty(checkInDate),
+            endDate: HotelDateFormatters.apiOrEmpty(checkOutDate),
+            sort: sorting ?? "",
+          );
+        }
         return result.data?.map((d) => Property.fromDataSort(d)).toList();
       },
     );
@@ -447,7 +457,7 @@ class HotelHomeResultController extends GetxController {
 
   void toggleEditable() => isEditable.value = !isEditable.value;
 
-  void setEditable(bool value) => isEditable.value = value;
+  void setEditable() => isEditable.value = !isEditable.value;
 
   void toggleSearchBar() => isSearch.value = !isSearch.value;
 }
