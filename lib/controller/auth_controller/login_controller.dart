@@ -7,8 +7,8 @@ import '../../network/service_provider.dart';
 
 
 class LoginController extends GetxController {
-  TextEditingController emailInput = TextEditingController(text: "webalignsolutions@gmail.comg");
-  TextEditingController passwordInput = TextEditingController(text: "12345678");
+  TextEditingController emailInput = TextEditingController();
+  TextEditingController passwordInput = TextEditingController();
   LoginModel loginModel = LoginModel();
 
   Future loginApi() async {
